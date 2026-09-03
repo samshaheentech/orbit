@@ -38,7 +38,8 @@ Open `http://localhost:4242` in any browser. Always running on login.
 - Fire 2 — webapp UI shell: orbit ring, telemetry, lanes, fires timeline, plan input. Done.
 - Fire 3a — data contract, emitter, live lane/brief/plan rendering. Done.
 - Fire 3b — actions (tag, skip, explore, prune, approve, read), produced vs consumed, spend by lane and model. Done.
-- Fire 3c — history. Next.
+- Fire 3c — brief history, per-lane archive, fires filter. Done.
+- Fire 4 — career lane. Next.
 
 ## Architecture
 
