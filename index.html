@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent — Sam Shaheen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 1.5rem;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.4rem; font-weight: 500; color: #fff; letter-spacing: -0.01em; }
+    p  { font-size: 0.9rem; color: #666; text-align: center; max-width: 420px; line-height: 1.6; }
+    .status {
+      font-size: 0.8rem; color: #444;
+      border: 1px solid #222; border-radius: 6px;
+      padding: 0.5rem 1rem;
+    }
+    .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+           background: #22c55e; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Agent Platform</h1>
+  <p>Fire 1 skeleton is live. Fire 2 will build the full interface.</p>
+  <div class="status" id="status">
+    <span class="dot"></span>Server connecting...
+  </div>
+  <script>
+    fetch('/api/events')
+      .then(r => r.json())
+      .then(events => {
+        const last = events[events.length - 1];
+        document.getElementById('status').innerHTML =
+          '<span class="dot"></span>' +
+          (last ? `Last event: ${last.type} · ${last.ts}` : 'No events yet — run a fire to start.');
+      })
+      .catch(() => {
+        document.getElementById('status').innerHTML =
+          '<span class="dot" style="background:#ef4444"></span>Could not reach server.';
+      });
+  </script>
+</body>
+</html>
