@@ -1,1 +1,20 @@
+# Runtime dirs — not committed, created by install.sh
+running/
+done/
+blocked/
+logs/
+state/
+worktrees/
+reports/
+briefs/data/
+
+# OS
 .DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Node (for future CLI packaging)
+node_modules/
+*.lock

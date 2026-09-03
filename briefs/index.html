@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#0f1114; --bg1:#141719; --bg2:#1b1f24; --bg3:#22272d;
+  --line:#262b31; --line2:#353b43;
+  --tx:#ebe8e1; --tx2:#a7a399; --tx3:#6d6a63;
+  --amber:#f0a63a; --amber-wash:rgba(240,166,58,.14); --amber-line:rgba(240,166,58,.45);
+  --ok:#8db877; --ok-wash:rgba(141,184,119,.14);
+  --bad:#d8776f; --bad-wash:rgba(216,119,111,.14);
+  --radius:6px;
+  --font:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{background:var(--bg0);color:var(--tx);font:400 14px/1.55 var(--font);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+h1,h2,h3{font-weight:500;line-height:1.25}
+h1{font-size:22px} h2{font-size:17px} h3{font-size:14px}
+code{font-family:"SF Mono",Menlo,monospace;font-size:12.5px;background:var(--bg2);padding:1px 6px;border-radius:4px}
+:focus-visible{outline:1.5px solid var(--amber);outline-offset:2px}
+
+/* ---- top bar ---- */
+.top{height:52px;display:flex;align-items:center;gap:20px;padding:0 24px;border-bottom:1px solid var(--line);background:var(--bg0);position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px;letter-spacing:-.01em}
+.mark svg{width:18px;height:18px}
+.top .sp{flex:1}
+.clock{color:var(--tx2);font-size:13px;white-space:pre}
+.health{display:flex;align-items:center;gap:7px;color:var(--tx3);font-size:12.5px}
+.health i{width:7px;height:7px;border-radius:50%;background:var(--tx3);display:inline-block}
+.health.on i{background:var(--ok)} .health.off i{background:var(--bad)}
+.menu{display:none;padding:6px 8px;border:1px solid var(--line2);border-radius:var(--radius);font-size:13px;color:var(--tx2)}
+
+/* ---- frame ---- */
+.frame{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:calc(100vh - 52px)}
+.rail{border-right:1px solid var(--line);padding:22px 0;position:sticky;top:52px;height:calc(100vh - 52px);display:flex;flex-direction:column}
+.nav a{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;color:var(--tx2);font-size:14px}
+.nav a:hover{color:var(--tx);background:var(--bg1)}
+.nav a.on{color:var(--tx);box-shadow:inset 2px 0 0 var(--amber)}
+.nav a span{font-size:12px;color:var(--tx3)}
+.rail .foot{margin-top:auto;padding:0 24px;font-size:12.5px;color:var(--tx3);line-height:1.7}
+.rail .foot b{font-weight:500;color:var(--tx2)}
+
+main{padding:32px 44px 80px;max-width:1020px}
+section.panel{display:none} section.panel.on{display:block}
+
+/* ---- hero ---- */
+.hero{display:grid;grid-template-columns:320px minmax(0,1fr);gap:40px;align-items:center;margin-bottom:44px}
+.ring{width:320px;height:320px}
+.ring .tick{stroke:var(--line2);stroke-width:1}
+.ring .tick.q{stroke:var(--tx3)}
+.ring .orbit{fill:none;stroke:var(--line2);stroke-width:1}
+.ring .hl{fill:var(--tx3);font-size:11px;font-family:var(--font)}
+.ring .sat{fill:var(--bg0);stroke:var(--tx3);stroke-width:1.5}
+.ring .sat.past{fill:var(--tx3);stroke:var(--tx3)}
+.ring .sat.next{fill:var(--amber);stroke:var(--amber)}
+.ring .halo{fill:var(--amber-wash)}
+.ring .hand{stroke:var(--amber);stroke-width:1.5;stroke-linecap:round}
+.ring .now{fill:var(--amber)}
+.ring .win{fill:none;stroke:var(--amber);stroke-width:5;stroke-linecap:round;opacity:.9}
+.ring .win.ghost{stroke:var(--line2);stroke-dasharray:2 6;stroke-width:3;opacity:1;animation:none}
+.ring .big{fill:var(--tx);font-size:40px;font-weight:500;font-family:var(--font);letter-spacing:-.02em}
+.ring .lbl{fill:var(--tx2);font-size:12.5px;font-family:var(--font)}
+.ring .lbl2{fill:var(--tx3);font-size:12px;font-family:var(--font)}
+@media (prefers-reduced-motion:no-preference){
+  .ring .win.draw:not(.ghost){stroke-dasharray:1000;stroke-dashoffset:1000;animation:draw 1.1s cubic-bezier(.4,0,.2,1) .2s forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+}
+.tele{display:grid;grid-template-columns:1fr 1fr;gap:6px 32px}
+.tele div{padding:12px 0;border-bottom:1px solid var(--line)}
+.tele small{display:block;color:var(--tx3);font-size:12.5px;margin-bottom:2px}
+.tele b{display:block;font-size:22px;font-weight:500;letter-spacing:-.01em}
+.tele b em{font-style:normal;font-size:13px;color:var(--tx2);margin-left:6px;font-weight:400}
+.tele b.live{color:var(--amber)}
+.sync{margin-top:12px;font-size:12.5px;color:var(--tx3)}
+.sync button{color:var(--tx2);border-bottom:1px solid var(--line2)}
+
+/* ---- sections / rows ---- */
+.sec{margin-bottom:40px}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line2)}
+.sec-h h2{flex:1}
+.sec-h .meta{color:var(--tx3);font-size:12.5px}
+.tag{font-size:11.5px;color:var(--tx3);border:1px solid var(--line2);border-radius:4px;padding:1px 6px;line-height:1.5}
+.rows{list-style:none}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 20px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row .t{font-weight:500}
+.row .t small{font-weight:400;color:var(--tx2);margin-left:8px}
+.row .d{color:var(--tx2);font-size:13px;grid-column:1}
+.row .r{display:flex;align-items:center;gap:8px;justify-self:end;grid-row:1/3}
+.row.unread .t::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-right:9px;vertical-align:2px}
+.score{min-width:40px;text-align:center;padding:3px 7px;border:1px solid var(--line2);border-radius:4px;font-weight:500;font-size:13px}
+.score.hi{color:var(--amber);border-color:var(--amber-line)}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--tx2);white-space:nowrap}
+.pill.ok{color:var(--ok);border-color:transparent;background:var(--ok-wash)}
+.pill.bad{color:var(--bad);border-color:transparent;background:var(--bad-wash)}
+.pill.warn{color:var(--amber);border-color:transparent;background:var(--amber-wash)}
+.btn{padding:5px 11px;border:1px solid var(--line2);border-radius:var(--radius);color:var(--tx2);font-size:13px;background:var(--bg0);white-space:nowrap}
+.btn:hover{background:var(--bg2);color:var(--tx)}
+.btn.pri{color:var(--amber);border-color:var(--amber-line);background:var(--amber-wash)}
+.btn.pri:hover{background:rgba(240,166,58,.22)}
+.empty{padding:26px 0;color:var(--tx3);font-size:13.5px;line-height:1.7}
+.empty b{color:var(--tx2);font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 44px}
+.kpi{padding:14px 16px;background:var(--bg1);border-radius:var(--radius)}
+.kpi small{display:block;color:var(--tx3);font-size:12.5px;margin-bottom:4px}
+.kpi b{font-size:24px;font-weight:500;letter-spacing:-.01em}
+.kpi i{display:block;font-style:normal;font-size:12px;color:var(--tx3);margin-top:2px}
+.brief-blocks{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.blk{padding:14px 0 18px;border-bottom:1px solid var(--line)}
+.blk h3{margin-bottom:6px}
+.blk p,.blk li{color:var(--tx2);font-size:13.5px}
+.blk a{color:var(--amber)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.two h3{margin:8px 0 6px}
+.two ul{padding-left:18px;color:var(--tx2);font-size:13.5px}
+.two li{padding:3px 0}
+
+/* ---- fires timeline ---- */
+.fire{border-bottom:1px solid var(--line);padding:2px 0}
+.fire summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:20px;align-items:center;padding:12px 0}
+.fire summary::-webkit-details-marker{display:none}
+.fire .when{font-weight:500}
+.fire .when small{display:block;font-weight:400;color:var(--tx3);font-size:12px}
+.fire .tasks{display:flex;flex-wrap:wrap;gap:6px}
+.fire .cost{color:var(--tx2);font-size:13px}
+.fire .body{padding:0 0 16px 150px;color:var(--tx2);font-size:13px;line-height:1.7}
+.fire .body div{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;padding:3px 0;border-top:1px solid var(--line)}
+.fire .body div span:first-child{color:var(--tx3)}
+.day{color:var(--tx3);font-size:12.5px;margin:26px 0 2px}
+
+/* ---- plan ---- */
+textarea{width:100%;min-height:180px;background:var(--bg1);color:var(--tx);border:1px solid var(--line2);border-radius:var(--radius);padding:12px 14px;font:inherit;line-height:1.6;resize:vertical}
+textarea::placeholder{color:var(--tx3)}
+.plan-foot{display:flex;align-items:center;gap:14px;margin-top:10px;color:var(--tx3);font-size:12.5px}
+
+@media (max-width:820px){
+  .frame{grid-template-columns:1fr}
+  .rail{display:none;position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 0}
+  .rail.open{display:block}
+  .menu{display:inline-block}
+  main{padding:22px 20px 60px}
+  .hero{grid-template-columns:1fr;gap:16px}
+  .ring{width:260px;height:260px;margin:0 auto}
+  .kpis,.brief-blocks,.two{grid-template-columns:1fr 1fr}
+  .fire summary{grid-template-columns:100px minmax(0,1fr)}
+  .fire .cost{grid-column:2}
+  .fire .body{padding-left:0}
+}
+@media (max-width:520px){.kpis,.brief-blocks,.two,.tele{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="mark" href="#brief" aria-label="Orbit home">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="2.5" r="2" fill="#f0a63a"/></svg>
+    Orbit
+  </a>
+  <button class="menu" id="menu" aria-label="Toggle navigation">Menu</button>
+  <span class="sp"></span>
+  <span class="clock" id="clock"></span>
+  <span class="health" id="health"><i></i><span>connecting</span></span>
+</header>
+
+<div class="frame">
+  <aside class="rail" id="rail">
+    <nav class="nav" aria-label="Sections">
+      <a href="#brief" data-p="brief">Brief</a>
+      <a href="#career" data-p="career">Career <span id="n-career"></span></a>
+      <a href="#research" data-p="research">Research <span id="n-research"></span></a>
+      <a href="#operations" data-p="operations">Operations <span id="n-ops"></span></a>
+      <a href="#fires" data-p="fires">Fires <span id="n-fires"></span></a>
+      <a href="#plan" data-p="plan">Plan</a>
+    </nav>
+    <div class="foot">
+      <div>Next fire <b id="rail-next">—</b></div>
+      <div>Queue <b id="rail-queue">—</b></div>
+      <div>Default model <b>Sonnet 5</b></div>
+    </div>
+  </aside>
+
+  <main>
+
+  <!-- ================= BRIEF ================= -->
+  <section class="panel" id="p-brief">
+    <div class="hero">
+      <svg class="ring" id="ring" viewBox="0 0 320 320" role="img" aria-labelledby="ring-t">
+        <title id="ring-t">Today as an orbit: five fires, the current time, and the session window</title>
+        <g id="ticks"></g>
+        <circle class="orbit" cx="160" cy="160" r="118"/>
+        <path class="win ghost" id="win" d=""/>
+        <g id="sats"></g>
+        <line class="hand" id="hand" x1="160" y1="160" x2="160" y2="52"/>
+        <circle class="now" id="nowdot" cx="160" cy="42" r="3.5"/>
+        <text class="big" x="160" y="152" text-anchor="middle" id="big">—</text>
+        <text class="lbl" x="160" y="176" text-anchor="middle" id="biglbl">to next fire</text>
+        <text class="lbl2" x="160" y="198" text-anchor="middle" id="winlbl">window not synced</text>
+      </svg>
+      <div>
+        <div class="tele">
+          <div><small>Next fire</small><b id="t-next" class="live">—</b></div>
+          <div><small>Window resets in</small><b id="t-reset">—<em id="t-reset-at"></em></b></div>
+          <div><small>Fires today</small><b id="t-fires">0<em>of 5</em></b></div>
+          <div><small>Spent today</small><b id="t-cost">$0.00<em>estimate</em></b></div>
+        </div>
+        <p class="sync">Orbit can't see your session meter. <button id="sync" type="button">Sync the reset time</button> from Settings › Usage and the arc will follow it.</p>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><small>Produced</small><b id="k-prod">—</b><i>items delivered this week</i></div>
+      <div class="kpi"><small>Consumed</small><b id="k-cons">—</b><i>items you opened</i></div>
+      <div class="kpi"><small>Fires this week</small><b id="k-fires">—</b><i>done / partial / blocked</i></div>
+      <div class="kpi"><small>Cost this week</small><b id="k-cost">—</b><i>client-side estimate</i></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Morning brief</h2><span class="meta" id="brief-date"></span></div>
+      <div class="brief-blocks">
+        <div class="blk"><h3>Accomplished</h3><p>Nothing yet. The 2am fire writes the first brief.</p></div>
+        <div class="blk"><h3>To read</h3><p>Digests, leads, and ideas land here, newest first.</p></div>
+        <div class="blk"><h3>Questions for you</h3><p>Anything the agent couldn't decide on its own.</p></div>
+        <div class="blk"><h3>Tomorrow</h3><p>The 10pm fire drafts the plan. Your input goes in <a href="#plan">Plan</a>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CAREER ================= -->
+  <section class="panel" id="p-career">
+    <h1 style="margin-bottom:28px">Career</h1>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Leads</h2><span class="tag">sample</span><span class="meta">scored on prestige, purpose, remote, comp, trajectory</span></div>
+      <ul class="rows">
+        <li class="row unread"><div class="t">NVIDIA <small>Senior Software Engineer, DRIVE platform integration</small></div><div class="d">Remote in the US, Santa Clara flights, $215k to $290k base</div><div class="r"><span class="score hi">92</span><button class="btn">Tag go</button><button class="btn">Skip</button></div></li>
+        <li class="row unread"><div class="t">Waymo <small>Staff Engineer, onboard platform</small></div><div class="d">Hybrid, Mountain View, $240k to $310k base</div><div class="r"><span class="score hi">84</span><button class="btn">Tag go</button><button class="btn">Skip</button></div></li>
+        <li class="row"><div class="t">Anduril <small>Senior Embedded Engineer, autonomy</small></div><div class="d">Remote-friendly, Costa Mesa, $180k to $240k base</div><div class="r"><span class="score">71</span><button class="btn">Tag go</button><button class="btn">Skip</button></div></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Resume loop</h2><span class="tag">sample</span><span class="meta">champion vs challengers, two graders must agree</span></div>
+      <ul class="rows">
+        <li class="row"><div class="t">v33 <small>champion, Friendly Voice</small></div><div class="d">Locked rulings enforced. Beaten by nothing yet.</div><div class="r"><span class="pill ok">champion</span></div></li>
+        <li class="row"><div class="t">Challenger 03 <small>for the NVIDIA DRIVE posting</small></div><div class="d">Grader A 78, Grader B 81, agree on 2 of 3 edits. Moves the domain controller bullets above the camera platform.</div><div class="r"><span class="pill warn">review</span><button class="btn">View diff</button></div></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Companies</h2><span class="tag">sample</span><span class="meta">where your profile meets where the world is moving</span></div>
+      <ul class="rows">
+        <li class="row"><div class="t">Figure <small>humanoid robotics</small></div><div class="d">Safety-critical realtime control on custom silicon. Your domain controller story maps directly.</div><div class="r"><button class="btn">Add to targets</button><button class="btn">Skip</button></div></li>
+        <li class="row"><div class="t">Skydio <small>autonomous drones</small></div><div class="d">Perception on constrained compute, multi-camera stacks. Remote engineering roles exist.</div><div class="r"><button class="btn">Add to targets</button><button class="btn">Skip</button></div></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Ideas</h2><span class="tag">sample</span><span class="meta">daily stream, you prune</span></div>
+      <ul class="rows">
+        <li class="row"><div class="t">Bench-as-a-service for ADAS startups</div><div class="d">Why now: every autonomy startup rebuilds the same HIL bench. Kill test: five founder calls, ask what they'd pay.</div><div class="r"><button class="btn pri">Explore</button><button class="btn">Prune</button></div></li>
+        <li class="row"><div class="t">Linker-file generator as open source</div><div class="d">Why now: the memory-map YAML pipeline you built has no public equivalent. Kill test: does anyone star it in 30 days.</div><div class="r"><button class="btn pri">Explore</button><button class="btn">Prune</button></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= RESEARCH ================= -->
+  <section class="panel" id="p-research">
+    <h1 style="margin-bottom:28px">Research</h1>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Digests</h2><span class="tag">sample</span><span class="meta">read, then take the check; your profile updates from the answers</span></div>
+      <ul class="rows">
+        <li class="row unread"><div class="t">DRIVE Thor and the centralized compute stack <small>18 min</small></div><div class="d">How Thor consolidates ADAS and cockpit on one SoC, and where your Bosch domain controller experience lands in that architecture.</div><div class="r"><button class="btn pri">Read</button><button class="btn">Check (5)</button></div></li>
+        <li class="row"><div class="t">CUDA for embedded engineers <small>24 min</small></div><div class="d">Streams, memory models, and what actually changes when the accelerator is on-die.</div><div class="r"><span class="pill ok">4 of 5</span><button class="btn">Reread</button></div></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Coding ramp</h2><span class="tag">sample</span><span class="meta">from hash maps forward, struggles return in a week</span></div>
+      <ul class="rows">
+        <li class="row"><div class="t">Valid anagram <small>hash map</small></div><div class="d">Open since three sessions ago. Tests in <code>ramp/valid_anagram/</code>.</div><div class="r"><span class="pill warn">due today</span><button class="btn">Open</button></div></li>
+        <li class="row"><div class="t">Two sum <small>hash map</small></div><div class="d">Passed first try. Returns Sep 10 for retention.</div><div class="r"><span class="pill ok">passed</span></div></li>
+        <li class="row"><div class="t">Group anagrams <small>hash map</small></div><div class="d">Next in the ramp once Valid anagram lands.</div><div class="r"><span class="pill">queued</span></div></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Knowledge profile</h2><span class="tag">sample</span><span class="meta">evidence only, every line links to a check or a result</span></div>
+      <div class="two">
+        <div><h3>Strengths</h3><ul><li>Safety-critical integration at scale</li><li>Build systems, toolchains, release engineering</li><li>Memory maps and linker generation</li></ul></div>
+        <div><h3>Gaps to close</h3><ul><li>CUDA execution model</li><li>Python idioms under time pressure</li><li>Systems design interview vocabulary</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= OPERATIONS ================= -->
+  <section class="panel" id="p-operations">
+    <h1 style="margin-bottom:28px">Operations</h1>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Inboxes</h2><span class="meta">label and archive daily, never send</span></div>
+      <ul class="rows">
+        <li class="row"><div class="t">SamShaheen.tech@gmail.com <small>career</small></div><div class="d">Not connected. Fire 7 adds the Gmail connector.</div><div class="r"><span class="pill">not connected</span></div></li>
+        <li class="row"><div class="t">Personal Gmail</div><div class="d">Not connected. Deletions will queue here for your approval for two weeks before anything is permanent.</div><div class="r"><span class="pill">not connected</span></div></li>
+      </ul>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Deletion proposals</h2><span class="meta">nothing is deleted until you approve it here</span></div>
+      <div class="empty"><b>No proposals yet.</b><br>Once an inbox is connected, the agent proposes batches and you approve or skip them per sender.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>Mission file</h2><span class="meta">agent-owned, updated every career run</span></div>
+      <ul class="rows">
+        <li class="row"><div class="t">Sam_Career_Mission.md</div><div class="d">Last updated by you in the Career Prep chat. The agent takes over on the first career fire.</div><div class="r"><button class="btn">Open</button></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= FIRES ================= -->
+  <section class="panel" id="p-fires">
+    <h1 style="margin-bottom:8px">Fires</h1>
+    <p style="color:var(--tx2);margin-bottom:20px">Every run, newest first. Open one to see what it did and what it cost.</p>
+    <div id="fires-list"></div>
+  </section>
+
+  <!-- ================= PLAN ================= -->
+  <section class="panel" id="p-plan">
+    <h1 style="margin-bottom:28px">Plan</h1>
+    <div class="sec">
+      <div class="sec-h"><h2>Tomorrow, as drafted at 10pm</h2><span class="meta" id="plan-draft-meta"></span></div>
+      <div class="empty" id="plan-draft"><b>No draft yet.</b><br>The 10pm fire writes tomorrow's plan here. Until then the agent runs the queue in order.</div>
+    </div>
+    <div class="sec">
+      <div class="sec-h"><h2>Your input for the 2am fire</h2><span class="meta">read at 2:00, then cleared</span></div>
+      <textarea id="plan-input" placeholder="Anything you want the next fire to do, skip, or change. Plain text is fine."></textarea>
+      <div class="plan-foot">
+        <button class="btn pri" id="plan-save" type="button">Save input</button>
+        <span id="plan-status"></span>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  const FIRES=[22,2,6,14,18];
+  const WINDOW_H=5;
+  const $=id=>document.getElementById(id);
+  const pad=n=>String(n).padStart(2,'0');
+  const fmtHM=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const fmtDur=ms=>{ if(ms<0)ms=0; const m=Math.round(ms/60000); if(m<60)return `${m}m`; const h=Math.floor(m/60); return `${h}h ${pad(m%60)}m`; };
+  const cls=s=>({DONE:'ok',BLOCKED:'bad',ERROR:'bad',LIMIT:'warn',TIMEOUT:'warn'}[s]||'');
+  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const state={events:[],windowResetAt:null};
+
+  /* routing */
+  const panels=['brief','career','research','operations','fires','plan'];
+  function route(){
+    const p=(location.hash||'#brief').slice(1);
+    const cur=panels.includes(p)?p:'brief';
+    panels.forEach(n=>$('p-'+n).classList.toggle('on',n===cur));
+    document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===cur));
+    $('rail').classList.remove('open');
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange',route);
+  $('menu').addEventListener('click',()=>$('rail').classList.toggle('open'));
+
+  /* clock */
+  function tickClock(){
+    const d=new Date();
+    $('clock').textContent=d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+'   '+fmtHM(d);
+  }
+
+  /* ring */
+  const C=160,R=118;
+  const ang=h=>(h/24)*Math.PI*2-Math.PI/2;
+  const pt=(h,r)=>[C+r*Math.cos(ang(h)),C+r*Math.sin(ang(h))];
+  function arcPath(h0,h1,r){
+    const [x0,y0]=pt(h0,r),[x1,y1]=pt(h1,r);
+    const large=((h1-h0+24)%24)>12?1:0;
+    return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  }
+  function buildTicks(){
+    let s='';
+    for(let h=0;h<24;h++){
+      const q=h%6===0, r0=q?R-9:R-5, [x0,y0]=pt(h,r0),[x1,y1]=pt(h,R);
+      s+=`<line class="tick${q?' q':''}" x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"/>`;
+      if(q){ const [lx,ly]=pt(h,R+16); s+=`<text class="hl" x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="middle">${h===0?'00':h}</text>`; }
+    }
+    $('ticks').innerHTML=s;
+  }
+  function nextFire(now){
+    const h=now.getHours()+now.getMinutes()/60;
+    const sorted=[...FIRES].sort((a,b)=>a-b);
+    let nh=sorted.find(f=>f>h);
+    const d=new Date(now);
+    if(nh===undefined){ nh=sorted[0]; d.setDate(d.getDate()+1); }
+    d.setHours(nh,0,0,0);
+    return {hour:nh,at:d};
+  }
+  function firesToday(events,now){
+    const today=now.toDateString();
+    return new Set(events.filter(e=>e.type==='fire_start'&&new Date(e.ts).toDateString()===today).map(e=>e.fire)).size;
+  }
+  function renderRing(){
+    const now=new Date(), nowH=now.getHours()+now.getMinutes()/60;
+    const nf=nextFire(now);
+    const [hx,hy]=pt(nowH,R-12),[dx,dy]=pt(nowH,R);
+    $('hand').setAttribute('x2',hx.toFixed(1)); $('hand').setAttribute('y2',hy.toFixed(1));
+    $('nowdot').setAttribute('cx',dx.toFixed(1)); $('nowdot').setAttribute('cy',dy.toFixed(1));
+    let s='';
+    FIRES.forEach(h=>{
+      const [x,y]=pt(h,R);
+      const isNext=h===nf.hour;
+      const past=!isNext&&h<nowH;
+      if(isNext) s+=`<circle class="halo" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13"/>`;
+      s+=`<circle class="sat${isNext?' next':past?' past':''}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5"><title>Fire at ${pad(h)}:00</title></circle>`;
+    });
+    $('sats').innerHTML=s;
+    $('big').textContent=fmtDur(nf.at-now);
+    $('biglbl').textContent=`to the ${pad(nf.hour)}:00 fire`;
+    $('t-next').textContent=`${pad(nf.hour)}:00`;
+    $('rail-next').textContent=`${pad(nf.hour)}:00`;
+    const win=$('win');
+    if(state.windowResetAt&&state.windowResetAt>now){
+      const endH=state.windowResetAt.getHours()+state.windowResetAt.getMinutes()/60;
+      const startH=(endH-WINDOW_H+24)%24;
+      win.setAttribute('d',arcPath(startH,endH,R+22));
+      win.classList.remove('ghost');
+      $('winlbl').textContent=`window resets ${fmtHM(state.windowResetAt)}`;
+      $('t-reset').firstChild.textContent=fmtDur(state.windowResetAt-now);
+      $('t-reset-at').textContent=fmtHM(state.windowResetAt);
+    } else {
+      win.setAttribute('d',arcPath(nf.hour,(nf.hour+WINDOW_H)%24,R+22));
+      win.classList.add('ghost');
+      $('winlbl').textContent='window not synced';
+      $('t-reset').firstChild.textContent='—'; $('t-reset-at').textContent='';
+    }
+    $('t-fires').firstChild.textContent=String(firesToday(state.events,now));
+  }
+  $('sync').addEventListener('click',()=>{
+    const v=prompt('When does your session window reset? Enter a time like 23:40, from Settings › Usage.');
+    if(!v)return;
+    const m=v.trim().match(/^(\d{1,2}):(\d{2})$/); if(!m){alert('Use HH:MM, for example 23:40.');return;}
+    const d=new Date(); d.setHours(+m[1],+m[2],0,0); if(d<new Date()) d.setDate(d.getDate()+1);
+    state.windowResetAt=d; localStorage.setItem('orbit.windowResetAt',d.toISOString());
+    $('win').classList.remove('draw'); void $('win').getBoundingClientRect(); $('win').classList.add('draw');
+    renderRing();
+    fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'window_synced',reset_at:d.toISOString()})}).catch(()=>{});
+  });
+  const saved=localStorage.getItem('orbit.windowResetAt');
+  if(saved){ const d=new Date(saved); if(d>new Date()) state.windowResetAt=d; }
+
+  /* fires timeline */
+  function renderFires(){
+    const byFire=new Map();
+    state.events.filter(e=>e.fire).forEach(e=>{ if(!byFire.has(e.fire))byFire.set(e.fire,[]); byFire.get(e.fire).push(e); });
+    const fires=[...byFire.entries()].map(([id,ev])=>{
+      const start=ev.find(e=>e.type==='fire_start')||ev[0];
+      const end=ev.find(e=>e.type==='fire_end');
+      const tasks=ev.filter(e=>e.type==='task_end');
+      const cost=ev.filter(e=>e.type==='task_end').reduce((a,e)=>a+(+e.cost_usd||0),0);
+      return {id,ts:new Date(start.ts),end,tasks,cost,ev};
+    }).sort((a,b)=>b.ts-a.ts);
+    $('n-fires').textContent=fires.length||'';
+    if(!fires.length){ $('fires-list').innerHTML=`<div class="empty"><b>No fires yet.</b><br>Run one by hand to see it here: <code>bash ~/git/orbit/run.sh</code></div>`; return; }
+    let html='',lastDay='';
+    fires.forEach(f=>{
+      const day=f.ts.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+      if(day!==lastDay){ html+=`<div class="day">${day}</div>`; lastDay=day; }
+      const pills=f.tasks.length?f.tasks.map(t=>`<span class="pill ${cls(t.status)}">${esc(t.task)} ${esc(t.status).toLowerCase()}</span>`).join(''):`<span class="pill">${f.end?esc(f.end.status).replace('_',' '):'running'}</span>`;
+      const rows=f.ev.map(e=>`<div><span>${fmtHM(new Date(e.ts))}</span><span>${esc(e.type).replace('_',' ')}${e.task?', '+esc(e.task):''}${e.note?' — '+esc(e.note):''}</span></div>`).join('');
+      html+=`<details class="fire"><summary><span class="when">${fmtHM(f.ts)}<small>${esc(f.id).replace('fire-','')}</small></span><span class="tasks">${pills}</span><span class="cost">${f.cost?'$'+f.cost.toFixed(2):''}</span></summary><div class="body">${rows}</div></details>`;
+    });
+    $('fires-list').innerHTML=html;
+  }
+
+  /* kpis: counts from the event log; produced/consumed wire up in fire 3 */
+  function renderKpis(){
+    const wk=Date.now()-7*864e5;
+    const ends=state.events.filter(e=>e.type==='task_end'&&new Date(e.ts)>wk);
+    const d=ends.filter(e=>e.status==='DONE').length,p=ends.filter(e=>e.status==='PARTIAL').length,b=ends.filter(e=>['BLOCKED','ERROR'].includes(e.status)).length;
+    $('k-fires').textContent=ends.length?`${d} / ${p} / ${b}`:'—';
+    const cost=state.events.filter(e=>e.type==='fire_end'&&new Date(e.ts)>wk).reduce((a,e)=>a+(+e.cost_usd||0),0);
+    $('k-cost').textContent=cost?'$'+cost.toFixed(2):'—';
+    const today=new Date().toDateString();
+    const tc=state.events.filter(e=>e.type==='fire_end'&&new Date(e.ts).toDateString()===today).reduce((a,e)=>a+(+e.cost_usd||0),0);
+    $('t-cost').firstChild.textContent='$'+tc.toFixed(2);
+    const last=[...state.events].reverse().find(e=>e.type==='fire_end'&&/remaining/.test(e.note||''));
+    const m=last&&last.note.match(/(\d+) remaining/); $('rail-queue').textContent=m?m[1]:'—';
+    $('brief-date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  }
+
+  /* plan */
+  async function loadPlan(){
+    try{ const r=await fetch('/api/plan'); const j=await r.json(); $('plan-input').value=j.content||''; }catch(e){}
+  }
+  $('plan-save').addEventListener('click',async()=>{
+    const content=$('plan-input').value;
+    try{
+      const r=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content})});
+      if(!r.ok)throw 0;
+      $('plan-status').textContent='Saved '+fmtHM(new Date());
+    }catch(e){ $('plan-status').textContent="Couldn't save. Is the server running?"; }
+  });
+
+  /* data */
+  async function load(){
+    try{
+      const r=await fetch('/api/events'); state.events=await r.json();
+      $('health').className='health on'; $('health').lastElementChild.textContent='server online';
+    }catch(e){
+      $('health').className='health off'; $('health').lastElementChild.textContent='server offline';
+    }
+    renderFires(); renderKpis(); renderRing();
+  }
+
+  buildTicks(); tickClock(); route(); renderRing(); load(); loadPlan();
+  $('win').classList.add('draw');
+  setInterval(tickClock,15000); setInterval(renderRing,30000); setInterval(load,120000);
+})();
+</script>
+</body>
+</html>

@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.sam.agent-runner</string>
+  <key>Label</key><string>com.sam.orbit-runner</string>
 
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>__HOME__/agent/run.sh</string>
+    <string>__ORBIT__/run.sh</string>
   </array>
 
   <!-- 10pm planning fire, 2am morning brief, 6am/2pm/6pm working fires -->
@@ -29,8 +29,8 @@
     <key>DEFAULT_MAX_TURNS</key><string>60</string>
   </dict>
 
-  <key>StandardOutPath</key><string>__HOME__/agent/logs/runner.out</string>
-  <key>StandardErrorPath</key><string>__HOME__/agent/logs/runner.err</string>
+  <key>StandardOutPath</key><string>__ORBIT__/logs/runner.out</string>
+  <key>StandardErrorPath</key><string>__ORBIT__/logs/runner.err</string>
   <key>RunAtLoad</key><false/>
 </dict>
 </plist>

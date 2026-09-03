@@ -1,13 +1,13 @@
 #!/bin/bash
-# ~/agent/run.sh — core agent runner
-# Called by launchd on schedule. Works the queue, writes per-fire summary to briefs/data/events.jsonl
-# Test by hand: bash ~/agent/run.sh
+# orbit/run.sh — core runner
+# Called by launchd on schedule. Works queue/, writes every action to briefs/data/events.jsonl
+# Test by hand from anywhere: bash ~/git/orbit/run.sh
 
 set -euo pipefail
 
-AGENT_HOME="${AGENT_HOME:-$HOME/agent}"
-CONFIG="$AGENT_HOME/config/user.md"
-SYSTEM_PROMPT="$AGENT_HOME/system/prompt.md"
+ORBIT_HOME="${ORBIT_HOME:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+CONFIG="$ORBIT_HOME/config/user.md"
+SYSTEM_PROMPT="$ORBIT_HOME/system/prompt.md"
 
 # Tunables (override via env or launchd EnvironmentVariables)
 MAX_TASKS_PER_RUN="${MAX_TASKS_PER_RUN:-2}"
@@ -18,14 +18,14 @@ DEFAULT_EFFORT="${DEFAULT_EFFORT:-medium}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-4}"                  # before task is parked in blocked/
 
 # Paths
-Q="$AGENT_HOME/queue"
-RUN="$AGENT_HOME/running"
-DONE="$AGENT_HOME/done"
-BLOCKED="$AGENT_HOME/blocked"
-LOGS="$AGENT_HOME/logs"
-STATE="$AGENT_HOME/state"
-WORKTREES="$AGENT_HOME/worktrees"
-EVENTS="$AGENT_HOME/briefs/data/events.jsonl"
+Q="$ORBIT_HOME/queue"
+RUN="$ORBIT_HOME/running"
+DONE="$ORBIT_HOME/done"
+BLOCKED="$ORBIT_HOME/blocked"
+LOGS="$ORBIT_HOME/logs"
+STATE="$ORBIT_HOME/state"
+WORKTREES="$ORBIT_HOME/worktrees"
+EVENTS="$ORBIT_HOME/briefs/data/events.jsonl"
 
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -85,11 +85,11 @@ run_with_timeout() {
 }
 
 notify() {
-  osascript -e "display notification \"$2\" with title \"Agent\" subtitle \"$1\"" >/dev/null 2>&1 || true
+  osascript -e "display notification \"$2\" with title \"Orbit\" subtitle \"$1\"" >/dev/null 2>&1 || true
 }
 
 # ---- single instance lock ----
-LOCK="$AGENT_HOME/.lock"
+LOCK="$ORBIT_HOME/.lock"
 if ! mkdir "$LOCK" 2>/dev/null; then
   if kill -0 "$(cat "$LOCK/pid" 2>/dev/null)" 2>/dev/null; then
     log_event "fire_skipped" "" "" "locked" "" 0 0 0 "another instance running"

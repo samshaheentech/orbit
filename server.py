@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-~/agent/server.py — local webapp server
-Serves ~/agent/briefs/ on http://localhost:4242
+orbit/server.py — local webapp server
+Serves orbit/briefs/ on http://localhost:4242
 Handles POST /api/event for webapp → disk writes (tag lead, prune idea, mark read, plan input)
 Kept intentionally minimal: stdlib only, no dependencies.
 """
@@ -15,8 +15,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-PORT = int(os.environ.get("AGENT_PORT", 4242))
-BRIEFS_DIR = Path(os.environ.get("AGENT_BRIEFS", Path.home() / "agent" / "briefs"))
+PORT = int(os.environ.get("ORBIT_PORT", 4242))
+BRIEFS_DIR = Path(os.environ.get("ORBIT_BRIEFS", Path(__file__).resolve().parent / "briefs"))
 EVENTS_FILE = BRIEFS_DIR / "data" / "events.jsonl"
 PLAN_FILE = BRIEFS_DIR / "data" / "plan.md"
 
@@ -154,7 +154,7 @@ def main():
     (BRIEFS_DIR / "data").mkdir(parents=True, exist_ok=True)
 
     server = HTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"Agent server running at http://localhost:{PORT}", flush=True)
+    print(f"Orbit server running at http://localhost:{PORT}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

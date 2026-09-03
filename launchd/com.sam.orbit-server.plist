@@ -2,25 +2,25 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.sam.agent-server</string>
+  <key>Label</key><string>com.sam.orbit-server</string>
 
   <key>ProgramArguments</key>
   <array>
     <string>/usr/bin/python3</string>
-    <string>__HOME__/agent/server.py</string>
+    <string>__ORBIT__/server.py</string>
   </array>
 
   <key>EnvironmentVariables</key>
   <dict>
-    <key>AGENT_PORT</key><string>4242</string>
-    <key>AGENT_BRIEFS</key><string>__HOME__/agent/briefs</string>
+    <key>ORBIT_PORT</key><string>4242</string>
+    <key>ORBIT_BRIEFS</key><string>__ORBIT__/briefs</string>
   </dict>
 
   <!-- Restart automatically if it dies — survives sleep/wake and network changes -->
   <key>KeepAlive</key><true/>
   <key>RunAtLoad</key><true/>
 
-  <key>StandardOutPath</key><string>__HOME__/agent/logs/server.out</string>
-  <key>StandardErrorPath</key><string>__HOME__/agent/logs/server.err</string>
+  <key>StandardOutPath</key><string>__ORBIT__/logs/server.out</string>
+  <key>StandardErrorPath</key><string>__ORBIT__/logs/server.err</string>
 </dict>
 </plist>
