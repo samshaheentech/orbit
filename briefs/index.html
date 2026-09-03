@@ -147,6 +147,11 @@ textarea::placeholder{color:var(--tx3)}
 .two li.ev{list-style:none;margin-left:-18px}
 .two li small{color:var(--tx3);margin-left:6px}
 .pill.tag{color:var(--amber);border-color:var(--amber-line)}
+.spend{list-style:none}
+.spend li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);color:var(--tx2);font-size:13.5px}
+.spend li b{color:var(--tx);font-weight:500}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--bg3);color:var(--tx);border:1px solid var(--line2);border-radius:var(--radius);padding:9px 14px;font-size:13px;z-index:9}
+a.btn{display:inline-block}
 .plan-foot{display:flex;align-items:center;gap:14px;margin-top:10px;color:var(--tx3);font-size:12.5px}
 
 @media (max-width:820px){
@@ -228,6 +233,12 @@ textarea::placeholder{color:var(--tx3)}
       <div class="kpi"><small>Consumed</small><b id="k-cons">—</b><i>items you opened</i></div>
       <div class="kpi"><small>Fires this week</small><b id="k-fires">—</b><i>done / partial / blocked</i></div>
       <div class="kpi"><small>Cost this week</small><b id="k-cost">—</b><i>client-side estimate</i></div>
+    </div>
+
+    <div class="sec" id="spend-sec">
+      <div class="sec-h"><h2>Spend this week</h2><span class="meta">client-side estimates reported by each run</span></div>
+      <div class="two"><div><h3>By lane</h3><ul class="spend" id="spend-lane"></ul></div><div><h3>By model</h3><ul class="spend" id="spend-model"></ul></div></div>
+      <div class="empty" id="spend-empty"><b>No spend yet.</b><br>Each fire reports what it cost; it shows up here by lane and by model.</div>
     </div>
 
     <div class="sec">
@@ -482,12 +493,20 @@ textarea::placeholder{color:var(--tx3)}
     deletion:i=>right(i,`<span class="pill">${i.meta.count??''} from ${esc(i.meta.sender||'')}</span>`),
     idea:i=>right(i,''), company:i=>right(i,''), mission:i=>right(i,'')
   };
+  const ACTIONS={lead:[['go','Tag go'],['skip','Skip']],resume:[['approve','Approve'],['skip','Skip']],company:[['add_target','Add to targets'],['skip','Skip']],idea:[['explore','Explore'],['prune','Prune']],digest:[['read','Mark read']],problem:[['read','Mark read']],inbox:[],deletion:[['approve','Approve'],['skip','Skip']],mission:[]};
+  const TAGGING=['go','explore','add_target','approve'];
+  function buttons(i){
+    if(i.kind==='resume'&&i.meta.status==='champion')return '';
+    const acts=(ACTIONS[i.kind]||[['read','Mark read']]).filter(([a])=>!(a==='read'&&i.read)&&!(i.tag&&TAGGING.includes(a)));
+    const open=i.meta.path?`<a class="btn" href="${esc(String(i.meta.path).replace(/^.*?briefs\//,'/'))}" target="_blank" rel="noopener">Open</a>`:'';
+    return open+acts.map(([a,l])=>`<button class="btn${['go','explore','approve'].includes(a)?' pri':''}" data-act="${a}" data-id="${esc(i.id)}">${l}</button>`).join('');
+  }
   const pill=(c,t)=>`<span class="pill ${c}">${esc(t)}</span>`;
   function right(i,main){
     const t=i.tag?pill('tag',i.tag):'';
     const sub=i.kind==='lead'&&i.meta.company?'':(i.kind==='digest'&&i.meta.minutes?'':'');
     const body=i.kind==='idea'&&(i.meta.why_now||i.meta.kill_test)?`Why now: ${esc(i.meta.why_now||'')} Kill test: ${esc(i.meta.kill_test||'')}`:esc(i.body||'');
-    return `<li class="row${i.read?'':' unread'}" data-id="${esc(i.id)}"><div class="t">${esc(i.title)}${sub}</div><div class="d">${body}</div><div class="r">${main}${t}</div></li>`;
+    return `<li class="row${i.read?'':' unread'}" data-id="${esc(i.id)}"><div class="t">${esc(i.title)}${sub}</div><div class="d">${body}</div><div class="r">${main}${t}${buttons(i)}</div></li>`;
   }
   function renderItems(){
     const items=reduceItems(); state.items=items;
@@ -509,6 +528,24 @@ textarea::placeholder{color:var(--tx3)}
     $('list-profile-empty').style.display=prof.length?'none':'';
     const unread=lane=>items.filter(i=>i.lane===lane&&!i.read).length||'';
     $('n-career').textContent=unread('career'); $('n-research').textContent=unread('research'); $('n-ops').textContent=unread('operations');
+  }
+  function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3200); }
+  document.addEventListener('click',async ev=>{
+    const b=ev.target.closest('button[data-act]'); if(!b)return;
+    const id=b.dataset.id, action=b.dataset.act;
+    state.events.push({type:'item_action',id,action,ts:new Date().toISOString(),source:'webapp'});
+    renderItems(); renderKpis();
+    try{ const r=await fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'item_action',id,action})}); if(!r.ok)throw 0; }
+    catch(e){ toast("Couldn't save that. Is the server running?"); }
+  });
+  const modelName=m=>/fable/.test(m||'')?'Fable 5.1':/sonnet/.test(m||'')?'Sonnet 5':/haiku/.test(m||'')?'Haiku 4.5':(m||'unknown');
+  function renderSpend(){
+    const wk=Date.now()-7*864e5;
+    const ends=state.events.filter(e=>e.type==='task_end'&&new Date(e.ts)>wk&&+e.cost_usd>0);
+    const sum=(key)=>{ const m=new Map(); ends.forEach(e=>{const k=key(e); m.set(k,(m.get(k)||0)+ +e.cost_usd);}); return [...m.entries()].sort((a,b)=>b[1]-a[1]); };
+    const li=rows=>rows.map(([k,v])=>`<li><span>${esc(k)}</span><b>$${v.toFixed(2)}</b></li>`).join('');
+    $('spend-lane').innerHTML=li(sum(e=>e.lane||'general')); $('spend-model').innerHTML=li(sum(e=>modelName(e.model)));
+    $('spend-empty').style.display=ends.length?'none':''; $('spend-sec').querySelector('.two').style.display=ends.length?'':'none';
   }
   function renderBrief(){
     const b=[...state.events].reverse().find(e=>e.type==='brief'); if(!b)return;
@@ -557,6 +594,9 @@ textarea::placeholder{color:var(--tx3)}
     const ends=state.events.filter(e=>e.type==='task_end'&&new Date(e.ts)>wk);
     const d=ends.filter(e=>e.status==='DONE').length,p=ends.filter(e=>e.status==='PARTIAL').length,b=ends.filter(e=>['BLOCKED','ERROR'].includes(e.status)).length;
     $('k-fires').textContent=ends.length?`${d} / ${p} / ${b}`:'—';
+    const produced=new Set(state.events.filter(e=>e.type==='item'&&new Date(e.ts)>wk).map(e=>e.id)).size;
+    const consumed=new Set(state.events.filter(e=>e.type==='item_action'&&new Date(e.ts)>wk).map(e=>e.id)).size;
+    $('k-prod').textContent=produced||'—'; $('k-cons').textContent=produced?consumed:'—';
     const cost=state.events.filter(e=>e.type==='fire_end'&&new Date(e.ts)>wk).reduce((a,e)=>a+(+e.cost_usd||0),0);
     $('k-cost').textContent=cost?'$'+cost.toFixed(2):'—';
     const today=new Date().toDateString();
@@ -588,7 +628,7 @@ textarea::placeholder{color:var(--tx3)}
     }catch(e){
       $('health').className='health off'; $('health').lastElementChild.textContent='server offline';
     }
-    renderItems(); renderBrief(); renderPlanDraft(); renderFires(); renderKpis(); renderRing();
+    renderItems(); renderBrief(); renderPlanDraft(); renderFires(); renderKpis(); renderSpend(); renderRing();
   }
 
   buildTicks(); tickClock(); route(); renderRing(); load(); loadPlan();
