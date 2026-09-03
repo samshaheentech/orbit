@@ -139,6 +139,14 @@ section.panel{display:none} section.panel.on{display:block}
 /* ---- plan ---- */
 textarea{width:100%;min-height:180px;background:var(--bg1);color:var(--tx);border:1px solid var(--line2);border-radius:var(--radius);padding:12px 14px;font:inherit;line-height:1.6;resize:vertical}
 textarea::placeholder{color:var(--tx3)}
+.draft{color:var(--tx2);font-size:13.5px;line-height:1.7;white-space:pre-wrap}
+.draft:empty{display:none}
+.blk ul{padding-left:18px}
+.blk li{padding:2px 0}
+.blk a{color:var(--amber)}
+.two li.ev{list-style:none;margin-left:-18px}
+.two li small{color:var(--tx3);margin-left:6px}
+.pill.tag{color:var(--amber);border-color:var(--amber-line)}
 .plan-foot{display:flex;align-items:center;gap:14px;margin-top:10px;color:var(--tx3);font-size:12.5px}
 
 @media (max-width:820px){
@@ -225,10 +233,10 @@ textarea::placeholder{color:var(--tx3)}
     <div class="sec">
       <div class="sec-h"><h2>Morning brief</h2><span class="meta" id="brief-date"></span></div>
       <div class="brief-blocks">
-        <div class="blk"><h3>Accomplished</h3><p>Nothing yet. The 2am fire writes the first brief.</p></div>
-        <div class="blk"><h3>To read</h3><p>Digests, leads, and ideas land here, newest first.</p></div>
-        <div class="blk"><h3>Questions for you</h3><p>Anything the agent couldn't decide on its own.</p></div>
-        <div class="blk"><h3>Tomorrow</h3><p>The 10pm fire drafts the plan. Your input goes in <a href="#plan">Plan</a>.</p></div>
+        <div class="blk"><h3>Accomplished</h3><div id="b-acc"><p>Nothing yet. The 2am fire writes the first brief.</p></div></div>
+        <div class="blk"><h3>To read</h3><div id="b-read"><p>Digests, leads, and ideas land here, newest first.</p></div></div>
+        <div class="blk"><h3>Questions for you</h3><div id="b-q"><p>Anything the agent couldn't decide on its own.</p></div></div>
+        <div class="blk"><h3>Tomorrow</h3><div id="b-tmr"><p>The 10pm fire drafts the plan. Your input goes in <a href="#plan">Plan</a>.</p></div></div>
       </div>
     </div>
   </section>
@@ -238,36 +246,28 @@ textarea::placeholder{color:var(--tx3)}
     <h1 style="margin-bottom:28px">Career</h1>
 
     <div class="sec">
-      <div class="sec-h"><h2>Leads</h2><span class="tag">sample</span><span class="meta">scored on prestige, purpose, remote, comp, trajectory</span></div>
-      <ul class="rows">
-        <li class="row unread"><div class="t">NVIDIA <small>Senior Software Engineer, DRIVE platform integration</small></div><div class="d">Remote in the US, Santa Clara flights, $215k to $290k base</div><div class="r"><span class="score hi">92</span><button class="btn">Tag go</button><button class="btn">Skip</button></div></li>
-        <li class="row unread"><div class="t">Waymo <small>Staff Engineer, onboard platform</small></div><div class="d">Hybrid, Mountain View, $240k to $310k base</div><div class="r"><span class="score hi">84</span><button class="btn">Tag go</button><button class="btn">Skip</button></div></li>
-        <li class="row"><div class="t">Anduril <small>Senior Embedded Engineer, autonomy</small></div><div class="d">Remote-friendly, Costa Mesa, $180k to $240k base</div><div class="r"><span class="score">71</span><button class="btn">Tag go</button><button class="btn">Skip</button></div></li>
-      </ul>
+      <div class="sec-h"><h2>Leads</h2><span class="meta">scored on prestige, purpose, remote, comp, trajectory</span></div>
+      <ul class="rows" id="list-lead"></ul>
+      <div class="empty" id="list-lead-empty"><b>No leads yet.</b><br>The career lane scores real postings from your target companies every fire.</div>
     </div>
-
     <div class="sec">
-      <div class="sec-h"><h2>Resume loop</h2><span class="tag">sample</span><span class="meta">champion vs challengers, two graders must agree</span></div>
-      <ul class="rows">
-        <li class="row"><div class="t">v33 <small>champion, Friendly Voice</small></div><div class="d">Locked rulings enforced. Beaten by nothing yet.</div><div class="r"><span class="pill ok">champion</span></div></li>
-        <li class="row"><div class="t">Challenger 03 <small>for the NVIDIA DRIVE posting</small></div><div class="d">Grader A 78, Grader B 81, agree on 2 of 3 edits. Moves the domain controller bullets above the camera platform.</div><div class="r"><span class="pill warn">review</span><button class="btn">View diff</button></div></li>
-      </ul>
+      <div class="sec-h"><h2>Resume loop</h2><span class="meta">champion vs challengers, two graders must agree</span></div>
+      <ul class="rows" id="list-resume"></ul>
+      <div class="empty" id="list-resume-empty"><b>v33 is the champion.</b><br>Challengers appear here when a lead is tagged go.</div>
     </div>
-
     <div class="sec">
-      <div class="sec-h"><h2>Companies</h2><span class="tag">sample</span><span class="meta">where your profile meets where the world is moving</span></div>
-      <ul class="rows">
-        <li class="row"><div class="t">Figure <small>humanoid robotics</small></div><div class="d">Safety-critical realtime control on custom silicon. Your domain controller story maps directly.</div><div class="r"><button class="btn">Add to targets</button><button class="btn">Skip</button></div></li>
-        <li class="row"><div class="t">Skydio <small>autonomous drones</small></div><div class="d">Perception on constrained compute, multi-camera stacks. Remote engineering roles exist.</div><div class="r"><button class="btn">Add to targets</button><button class="btn">Skip</button></div></li>
-      </ul>
+      <div class="sec-h"><h2>Companies</h2><span class="meta">where your profile meets where the world is moving</span></div>
+      <ul class="rows" id="list-company"></ul>
+      <div class="empty" id="list-company-empty"><b>No discoveries yet.</b><br>Companies outside your list land here with a reason.</div>
     </div>
-
     <div class="sec">
-      <div class="sec-h"><h2>Ideas</h2><span class="tag">sample</span><span class="meta">daily stream, you prune</span></div>
-      <ul class="rows">
-        <li class="row"><div class="t">Bench-as-a-service for ADAS startups</div><div class="d">Why now: every autonomy startup rebuilds the same HIL bench. Kill test: five founder calls, ask what they'd pay.</div><div class="r"><button class="btn pri">Explore</button><button class="btn">Prune</button></div></li>
-        <li class="row"><div class="t">Linker-file generator as open source</div><div class="d">Why now: the memory-map YAML pipeline you built has no public equivalent. Kill test: does anyone star it in 30 days.</div><div class="r"><button class="btn pri">Explore</button><button class="btn">Prune</button></div></li>
-      </ul>
+      <div class="sec-h"><h2>Ideas</h2><span class="meta">daily stream, you prune</span></div>
+      <ul class="rows" id="list-idea"></ul>
+      <div class="empty" id="list-idea-empty"><b>No ideas yet.</b><br>Each one arrives with a why-now and a kill test.</div>
+    </div>
+    <div class="sec" id="other-career" style="display:none">
+      <div class="sec-h"><h2>Other</h2><span class="meta">kinds the webapp has no layout for yet</span></div>
+      <ul class="rows" id="list-other-career"></ul>
     </div>
   </section>
 
@@ -276,28 +276,23 @@ textarea::placeholder{color:var(--tx3)}
     <h1 style="margin-bottom:28px">Research</h1>
 
     <div class="sec">
-      <div class="sec-h"><h2>Digests</h2><span class="tag">sample</span><span class="meta">read, then take the check; your profile updates from the answers</span></div>
-      <ul class="rows">
-        <li class="row unread"><div class="t">DRIVE Thor and the centralized compute stack <small>18 min</small></div><div class="d">How Thor consolidates ADAS and cockpit on one SoC, and where your Bosch domain controller experience lands in that architecture.</div><div class="r"><button class="btn pri">Read</button><button class="btn">Check (5)</button></div></li>
-        <li class="row"><div class="t">CUDA for embedded engineers <small>24 min</small></div><div class="d">Streams, memory models, and what actually changes when the accelerator is on-die.</div><div class="r"><span class="pill ok">4 of 5</span><button class="btn">Reread</button></div></li>
-      </ul>
+      <div class="sec-h"><h2>Digests</h2><span class="meta">read, then take the check; your profile updates from the answers</span></div>
+      <ul class="rows" id="list-digest"></ul>
+      <div class="empty" id="list-digest-empty"><b>No digests yet.</b><br>The research lane writes them from your gaps and targets.</div>
     </div>
-
     <div class="sec">
-      <div class="sec-h"><h2>Coding ramp</h2><span class="tag">sample</span><span class="meta">from hash maps forward, struggles return in a week</span></div>
-      <ul class="rows">
-        <li class="row"><div class="t">Valid anagram <small>hash map</small></div><div class="d">Open since three sessions ago. Tests in <code>ramp/valid_anagram/</code>.</div><div class="r"><span class="pill warn">due today</span><button class="btn">Open</button></div></li>
-        <li class="row"><div class="t">Two sum <small>hash map</small></div><div class="d">Passed first try. Returns Sep 10 for retention.</div><div class="r"><span class="pill ok">passed</span></div></li>
-        <li class="row"><div class="t">Group anagrams <small>hash map</small></div><div class="d">Next in the ramp once Valid anagram lands.</div><div class="r"><span class="pill">queued</span></div></li>
-      </ul>
+      <div class="sec-h"><h2>Coding ramp</h2><span class="meta">from hash maps forward, struggles return in a week</span></div>
+      <ul class="rows" id="list-problem"></ul>
+      <div class="empty" id="list-problem-empty"><b>Ramp not started.</b><br>Problems arrive with tests; you write the code.</div>
     </div>
-
     <div class="sec">
-      <div class="sec-h"><h2>Knowledge profile</h2><span class="tag">sample</span><span class="meta">evidence only, every line links to a check or a result</span></div>
-      <div class="two">
-        <div><h3>Strengths</h3><ul><li>Safety-critical integration at scale</li><li>Build systems, toolchains, release engineering</li><li>Memory maps and linker generation</li></ul></div>
-        <div><h3>Gaps to close</h3><ul><li>CUDA execution model</li><li>Python idioms under time pressure</li><li>Systems design interview vocabulary</li></ul></div>
-      </div>
+      <div class="sec-h"><h2>Knowledge profile</h2><span class="meta">evidence only, every line links to a check or a result</span></div>
+      <div class="two"><div><h3>Strengths</h3><ul id="list-strength"></ul></div><div><h3>Gaps to close</h3><ul id="list-gap"></ul></div></div>
+      <div class="empty" id="list-profile-empty"><b>Nothing asserted yet.</b><br>Lines appear here only after a check or a result backs them.</div>
+    </div>
+    <div class="sec" id="other-research" style="display:none">
+      <div class="sec-h"><h2>Other</h2><span class="meta">kinds the webapp has no layout for yet</span></div>
+      <ul class="rows" id="list-other-research"></ul>
     </div>
   </section>
 
@@ -307,22 +302,22 @@ textarea::placeholder{color:var(--tx3)}
 
     <div class="sec">
       <div class="sec-h"><h2>Inboxes</h2><span class="meta">label and archive daily, never send</span></div>
-      <ul class="rows">
-        <li class="row"><div class="t">SamShaheen.tech@gmail.com <small>career</small></div><div class="d">Not connected. Fire 7 adds the Gmail connector.</div><div class="r"><span class="pill">not connected</span></div></li>
-        <li class="row"><div class="t">Personal Gmail</div><div class="d">Not connected. Deletions will queue here for your approval for two weeks before anything is permanent.</div><div class="r"><span class="pill">not connected</span></div></li>
-      </ul>
+      <ul class="rows" id="list-inbox"></ul>
+      <div class="empty" id="list-inbox-empty"><b>No inbox connected.</b><br>Fire 7 adds the Gmail connector.</div>
     </div>
-
     <div class="sec">
       <div class="sec-h"><h2>Deletion proposals</h2><span class="meta">nothing is deleted until you approve it here</span></div>
-      <div class="empty"><b>No proposals yet.</b><br>Once an inbox is connected, the agent proposes batches and you approve or skip them per sender.</div>
+      <ul class="rows" id="list-deletion"></ul>
+      <div class="empty" id="list-deletion-empty"><b>No proposals yet.</b><br>Once an inbox is connected, batches queue here per sender.</div>
     </div>
-
     <div class="sec">
       <div class="sec-h"><h2>Mission file</h2><span class="meta">agent-owned, updated every career run</span></div>
-      <ul class="rows">
-        <li class="row"><div class="t">Sam_Career_Mission.md</div><div class="d">Last updated by you in the Career Prep chat. The agent takes over on the first career fire.</div><div class="r"><button class="btn">Open</button></div></li>
-      </ul>
+      <ul class="rows" id="list-mission"></ul>
+      <div class="empty" id="list-mission-empty"><b>Not taken over yet.</b><br>The agent updates Sam_Career_Mission.md on the first career fire.</div>
+    </div>
+    <div class="sec" id="other-operations" style="display:none">
+      <div class="sec-h"><h2>Other</h2><span class="meta">kinds the webapp has no layout for yet</span></div>
+      <ul class="rows" id="list-other-operations"></ul>
     </div>
   </section>
 
@@ -339,6 +334,7 @@ textarea::placeholder{color:var(--tx3)}
     <div class="sec">
       <div class="sec-h"><h2>Tomorrow, as drafted at 10pm</h2><span class="meta" id="plan-draft-meta"></span></div>
       <div class="empty" id="plan-draft"><b>No draft yet.</b><br>The 10pm fire writes tomorrow's plan here. Until then the agent runs the queue in order.</div>
+      <div class="draft" id="plan-draft-body"></div>
     </div>
     <div class="sec">
       <div class="sec-h"><h2>Your input for the 2am fire</h2><span class="meta">read at 2:00, then cleared</span></div>
@@ -464,6 +460,73 @@ textarea::placeholder{color:var(--tx3)}
   const saved=localStorage.getItem('orbit.windowResetAt');
   if(saved){ const d=new Date(saved); if(d>new Date()) state.windowResetAt=d; }
 
+  /* items: fold the log into current state */
+  function reduceItems(){
+    const items=new Map();
+    for(const e of state.events){
+      if(e.type==='item'&&e.id){ const prev=items.get(e.id)||{}; items.set(e.id,{...prev,...e,meta:{...(prev.meta||{}),...(e.meta||{})},read:prev.read||false,hidden:prev.hidden||false,tag:prev.tag||''}); }
+      else if(e.type==='item_update'&&items.has(e.id)){ const it=items.get(e.id),p=e.patch||{}; items.set(e.id,{...it,...p,meta:{...it.meta,...(p.meta||{})}}); }
+      else if(e.type==='item_action'&&items.has(e.id)){ const it=items.get(e.id);
+        if(e.action==='read')it.read=true; else if(e.action==='skip'||e.action==='prune')it.hidden=true;
+        else if(['go','explore','add_target','approve'].includes(e.action)){it.tag=e.action.replace('_',' ');it.read=true;}
+        else if(e.action==='check'&&e.result){it.meta.check_score=e.result;it.read=true;} }
+    }
+    return [...items.values()].filter(i=>!i.hidden).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  }
+  const rowHTML={
+    lead:i=>right(i,`<span class="score${(i.meta.score|0)>=80?' hi':''}">${i.meta.score??'—'}</span>`),
+    resume:i=>right(i,pill(i.meta.status==='champion'?'ok':i.meta.status==='rejected'?'bad':'warn',i.meta.status||'challenger')),
+    digest:i=>right(i,i.meta.check_score?pill('ok',i.meta.check_score):(i.meta.minutes?`<span class="pill">${i.meta.minutes} min</span>`:'')),
+    problem:i=>right(i,pill({passed:'ok',struggled:'bad',open:'warn'}[i.meta.status]||'',i.meta.status==='open'&&i.meta.due?'due '+new Date(i.meta.due+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}):(i.meta.status||'queued'))),
+    inbox:i=>right(i,pill(i.meta.status==='connected'?'ok':'',(i.meta.status||'not connected').replace('_',' '))),
+    deletion:i=>right(i,`<span class="pill">${i.meta.count??''} from ${esc(i.meta.sender||'')}</span>`),
+    idea:i=>right(i,''), company:i=>right(i,''), mission:i=>right(i,'')
+  };
+  const pill=(c,t)=>`<span class="pill ${c}">${esc(t)}</span>`;
+  function right(i,main){
+    const t=i.tag?pill('tag',i.tag):'';
+    const sub=i.kind==='lead'&&i.meta.company?'':(i.kind==='digest'&&i.meta.minutes?'':'');
+    const body=i.kind==='idea'&&(i.meta.why_now||i.meta.kill_test)?`Why now: ${esc(i.meta.why_now||'')} Kill test: ${esc(i.meta.kill_test||'')}`:esc(i.body||'');
+    return `<li class="row${i.read?'':' unread'}" data-id="${esc(i.id)}"><div class="t">${esc(i.title)}${sub}</div><div class="d">${body}</div><div class="r">${main}${t}</div></li>`;
+  }
+  function renderItems(){
+    const items=reduceItems(); state.items=items;
+    const kinds=['lead','resume','company','idea','digest','problem','inbox','deletion','mission'];
+    kinds.forEach(k=>{
+      const list=items.filter(i=>i.kind===k), el=$('list-'+k), em=$('list-'+k+'-empty');
+      if(!el)return;
+      el.innerHTML=list.map(i=>(rowHTML[k]||(x=>right(x,pill('',x.kind))))(i)).join('');
+      em.style.display=list.length?'none':'';
+    });
+    ['career','research','operations'].forEach(l=>{
+      const other=items.filter(i=>i.lane===l&&!kinds.includes(i.kind)&&i.kind!=='profile');
+      $('other-'+l).style.display=other.length?'':'none';
+      $('list-other-'+l).innerHTML=other.map(i=>right(i,pill('',i.kind))).join('');
+    });
+    const prof=items.filter(i=>i.kind==='profile');
+    $('list-strength').innerHTML=prof.filter(i=>i.meta.side==='strength').map(i=>`<li>${esc(i.title)}${i.meta.evidence?`<small>${esc(i.meta.evidence)}</small>`:''}</li>`).join('');
+    $('list-gap').innerHTML=prof.filter(i=>i.meta.side==='gap').map(i=>`<li>${esc(i.title)}${i.meta.evidence?`<small>${esc(i.meta.evidence)}</small>`:''}</li>`).join('');
+    $('list-profile-empty').style.display=prof.length?'none':'';
+    const unread=lane=>items.filter(i=>i.lane===lane&&!i.read).length||'';
+    $('n-career').textContent=unread('career'); $('n-research').textContent=unread('research'); $('n-ops').textContent=unread('operations');
+  }
+  function renderBrief(){
+    const b=[...state.events].reverse().find(e=>e.type==='brief'); if(!b)return;
+    const d=new Date(b.date+'T12:00:00');
+    $('brief-date').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+    const list=a=>a&&a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p>Nothing this time.</p>';
+    $('b-acc').innerHTML=list(b.accomplished);
+    $('b-read').innerHTML=b.to_read&&b.to_read.length?`<ul>${b.to_read.map(x=>{const it=(state.items||[]).find(i=>i.id===x.id);const lane=it?it.lane:'';return `<li><a href="#${lane||'brief'}">${esc(x.title||x.id)}</a></li>`;}).join('')}</ul>`:'<p>Nothing this time.</p>';
+    $('b-q').innerHTML=list(b.questions);
+    $('b-tmr').innerHTML=list(b.tomorrow);
+  }
+  function renderPlanDraft(){
+    const p=[...state.events].reverse().find(e=>e.type==='plan_draft'); if(!p)return;
+    $('plan-draft').style.display='none';
+    $('plan-draft-meta').textContent='for '+new Date(p.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+    $('plan-draft-body').textContent=p.body||'';
+  }
+
   /* fires timeline */
   function renderFires(){
     const byFire=new Map();
@@ -501,7 +564,7 @@ textarea::placeholder{color:var(--tx3)}
     $('t-cost').firstChild.textContent='$'+tc.toFixed(2);
     const last=[...state.events].reverse().find(e=>e.type==='fire_end'&&/remaining/.test(e.note||''));
     const m=last&&last.note.match(/(\d+) remaining/); $('rail-queue').textContent=m?m[1]:'—';
-    $('brief-date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+    if(!state.events.some(e=>e.type==='brief')) $('brief-date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
   }
 
   /* plan */
@@ -525,7 +588,7 @@ textarea::placeholder{color:var(--tx3)}
     }catch(e){
       $('health').className='health off'; $('health').lastElementChild.textContent='server offline';
     }
-    renderFires(); renderKpis(); renderRing();
+    renderItems(); renderBrief(); renderPlanDraft(); renderFires(); renderKpis(); renderRing();
   }
 
   buildTicks(); tickClock(); route(); renderRing(); load(); loadPlan();

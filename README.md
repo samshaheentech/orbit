@@ -36,7 +36,9 @@ Open `http://localhost:4242` in any browser. Always running on login.
 
 - Fire 1 — skeleton: runner, server, event log, launchd, plugin layout. Done.
 - Fire 2 — webapp UI shell: orbit ring, telemetry, lanes, fires timeline, plan input. Done.
-- Fire 3 — live data, KPIs, interactive actions. Next.
+- Fire 3a — data contract, emitter, live lane/brief/plan rendering. Done.
+- Fire 3b — actions and KPIs. Next.
+- Fire 3c — history.
 
 ## Architecture
 
@@ -48,6 +50,8 @@ Open `http://localhost:4242` in any browser. Always running on login.
 - `queue/` — tasks waiting to run
 - `launchd/` — macOS scheduler plists
 - `system/prompt.md` — system prompt appended to every agent run
+- `system/data-contract.md` — the event shapes lanes write; read this before writing a lane
+- `system/emit.py` — how lanes deliver items, briefs, and plan drafts
 
 ## Voice (coming soon)
 

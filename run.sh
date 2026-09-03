@@ -184,10 +184,12 @@ for TASK_FILE in "$Q"/*.md; do
   CONT=""
   [ "$ATT" -gt 1 ] && CONT="Attempt $ATT. Previous run worked in this worktree — check git log and git status first, then continue where it left off.
 "
+  export ORBIT_FIRE="$FIRE_ID" ORBIT_LANE="$LANE" ORBIT_HOME
   PROMPT="User config: $CONFIG
 Task file: $TASK_FILE
 Working tree: $WT  Branch: $BRANCH
 Allowed tools: $TOOLS
+Deliver anything the user should see through the emitter, never by editing events.jsonl: python3 $ORBIT_HOME/system/emit.py (contract: $ORBIT_HOME/system/data-contract.md)
 
 ${CONT}$(cat "$TASK_FILE")"
 
