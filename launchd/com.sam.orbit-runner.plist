@@ -10,15 +10,10 @@
     <string>__ORBIT__/run.sh</string>
   </array>
 
-  <!-- 10pm planning fire, 2am morning brief, 6am/2pm/6pm working fires -->
-  <key>StartCalendarInterval</key>
-  <array>
-    <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>2</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
-  </array>
+  <!-- Polls every 15 minutes. run.sh asks system/window.py whether it is inside one of Orbit's windows
+       (config/schedule.json, default 22:00 and 03:00, five hours each) with budget and time left; otherwise it exits
+       in under a second and logs nothing. -->
+  <key>StartInterval</key><integer>900</integer>
 
   <key>EnvironmentVariables</key>
   <dict>

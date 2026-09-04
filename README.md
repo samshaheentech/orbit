@@ -1,68 +1,57 @@
 # Orbit
 
-**Mission control for your life.**
+**Mission control for your life.** A personal agent platform that runs on your Mac, works a task queue five times a day with Claude Code, and delivers a morning brief into a local dark-mode webapp. Apollo, the voice layer, comes later.
 
-Orbit is a personal AI agent platform that runs on your Mac, works a task queue while you sleep, and delivers a morning brief into a local dark-mode webapp. Talk to it by voice through Apollo (coming soon).
+Built by Sam Shaheen, for a job hunt first. The core is generic; a new user replaces the config and the lanes (`docs/SETUP-NEW-USER.md`).
 
-## What it does
+## In two minutes
 
-- Fires 5x/day on a schedule (10pm planning, 2am morning brief, 6am/2pm/6pm working fires)
-- Works your task queue using Claude Code headless mode
-- Delivers briefs, job leads, research digests, coding problems, and business ideas
-- Tracks token usage and learns which model fits which task
-- Self-improves weekly via a Sunday retro fire
+- **Windows.** Orbit owns two 5-hour windows a night, 22:00 and 03:00 (`config/schedule.json`). launchd polls every 15 minutes; inside a window with budget and time left, the runner works the queue light-first, then heavy, then pulls from `backlog/`. Each window spends up to 50% of its capacity, measured through a calibration you feed by typing the meter reading once or twice. The plan is drafted at 22:00 and the brief lands at 07:40. Daytime is yours; `orbit fire` runs a manual fire any time.
+- **Tasks.** A task is a markdown file in `queue/` (or `backlog/` for one-shots that run when budget is spare) with frontmatter (`lane`, `model`, `effort`, `days`, `hours`, `weight`, `exec`, `requires_mcp`) and a body that briefs the agent. Recurring tasks copy themselves back into the queue.
+- **One log.** Everything lands in `briefs/data/events.jsonl`: fires, tasks, items the lanes produce, and every action you take in the webapp. `system/data-contract.md` is the schema; lanes write through `system/emit.py`.
+- **Webapp.** `localhost:4242`, always on. The orbit ring, the brief with history, lane pages with actions, the fires timeline, spend by lane and model, ratings, your plan input.
+- **Lanes.** Career (leads from real job boards, blind resume loop, company discovery, ideas), Research (digests with checks, coding ramp, knowledge profile), Sim (question sets per tagged lead, STAR drafts, your answers graded overnight, dictation), Operations (Gmail triage with a modify-only token, deletions behind a 14-day gate, mission file), System (plan, brief, retro).
+- **Cost.** Every run records tokens and cost; an estimator learns from history; the brief shows spend and estimate accuracy; heavy tasks pause for a window after a usage limit.
+- **Self-improvement.** Sunday retro proposes exact edits to its own tasks and prompts; you approve in the webapp; applied on a branch, never `main`.
 
 ## Install
-
 ```bash
 git clone https://github.com/samshaheentech/orbit ~/git/orbit
 bash ~/git/orbit/install.sh
+orbit status
 ```
+Desktop app (optional, same UI in a native window with a menu bar countdown and notifications): `bash desktop/build.sh`.
 
-Requires: macOS, Node.js, Claude Code CLI (`npm install -g @anthropic-ai/claude-code`), Claude Max plan.
+Requires macOS, Node 22+, Python 3, Claude Code logged in (`npm install -g @anthropic-ai/claude-code`, `claude login`), a Claude Max plan. Gmail is optional: `config/lanes/operations/SETUP.md`.
 
-## Add a task
-
+## Daily use
 ```bash
-cp ~/git/orbit/queue/_TEMPLATE.md ~/git/orbit/queue/010-my-task.md
-# edit the file, then the next fire picks it up
+orbit brief          # the latest brief, in the terminal
+orbit add 100-x      # new task from the template
+orbit fire           # run a fire now
+orbit status         # next fire, queue, last fire, window, server
+orbit pause / resume # the schedule
+orbit estimates      # estimate accuracy
+orbit assign         # which tasks earn a cheaper or better model
+```
+Write anything for the next fire in the Plan page; the 02:00 brief reads it and clears it.
+
+## Layout
+```
+run.sh              the runner            server.py         the webapp server
+bin/orbit           the CLI               install.sh        one-time install
+briefs/index.html   the webapp            briefs/data/      the log and item files (gitignored)
+system/             contract, emitter, estimator, window, assignments, system prompt
+lanes/<lane>/       lane scripts          config/lanes/<lane>/   lane config, prompts, rules
+queue/              tasks                 config/user.md    who you are
+docs/handoffs/      how each fire was specified
 ```
 
-## View your brief
+## Safety rules that are built in
+No sends from Gmail (the token has no send scope). Nothing trashed without your approval plus 14 days. No pushes, no `main` commits by any task. Resume improvements only surface if two independent graders agree. Every Gmail call is audit-logged.
 
-Open `http://localhost:4242` in any browser. Always running on login.
+## Build history
+Fire 1 skeleton, 2 webapp shell, 3 contract and live data, 4 career lane, 5 blind resume loop, 6 brief engine and research lane, 7 operations lane, 8 token intelligence, 9 retro, CLI, new-user docs. Specs in `docs/handoffs/`.
 
 ## Status
-
-- Fire 1 — skeleton: runner, server, event log, launchd, plugin layout. Done.
-- Fire 2 — webapp UI shell: orbit ring, telemetry, lanes, fires timeline, plan input. Done.
-- Fire 3a — data contract, emitter, live lane/brief/plan rendering. Done.
-- Fire 3b — actions (tag, skip, explore, prune, approve, read), produced vs consumed, spend by lane and model. Done.
-- Fire 3c — brief history, per-lane archive, fires filter. Done.
-- Fire 4 — career lane: fetcher, scoring, leads/companies/ideas tasks. Done.
-- Fire 5 — blind resume loop: `exec:` tasks, orchestrator, three prompts, rulings, dry-run harness. Done.
-- Fire 6 — research and learning lane. Next.
-
-## Architecture
-
-- `run.sh` — core runner, called by launchd
-- `server.py` — local webapp server (stdlib Python, no deps)
-- `briefs/` — webapp and event log
-- `config/user.md` — your config (name, goals, targets, rubrics)
-- `config/lanes/` — one folder per lane (career, research, operations...)
-- `config/lanes/career/resume/` — champion resume, locked rulings, the three loop prompts, approved variants
-- `lanes/` — lane scripts (`fetch_jobs.py`, `resume_loop.py`) and their fixtures
-- `queue/` — tasks waiting to run. A task with `exec: <script>` in its frontmatter runs that script directly instead of `claude -p`
-- `docs/handoffs/` — what each fire built and what it left open
-- `launchd/` — macOS scheduler plists
-- `system/prompt.md` — system prompt appended to every agent run
-- `system/data-contract.md` — the event shapes lanes write; read this before writing a lane
-- `system/emit.py` — how lanes deliver items, briefs, and plan drafts
-
-## Voice (coming soon)
-
-Apollo — talk to Orbit like Tony Stark talks to Jarvis.
-
-## For contributors
-
-Clone the repo, fill in your own `config/user.md`, define your lanes. The core is generic — it knows nothing about you until you configure it.
+All nine fires done. Next: run it for a week, read the retro, then Apollo.

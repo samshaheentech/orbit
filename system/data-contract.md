@@ -19,13 +19,15 @@ python3 "$ORBIT_HOME/system/emit.py" plan   --file /tmp/plan.md
 
 | type | who writes | fields |
 |------|-----------|--------|
-| `fire_start` `fire_end` `fire_limit` `fire_skipped` | runner | `status`, `note`, `cost_usd` |
-| `task_start` `task_end` `task_blocked` | runner | `lane`, `task`, `status`, `model`, `cost_usd`, `tokens_est`, `note` |
+| `fire_start` `fire_end` `fire_limit` `fire_skipped` `fire_stop` `backlog_pull` `window_start` | runner | `status`, `note`, `cost_usd`; `window_start` carries `reset_at` and `budget_usd` |
+| `meter_reading` | webapp | `pct`: what Settings › Usage showed, typed during an Orbit window; calibrates the budget |
+| `task_start` `task_end` `task_blocked` `task_skipped` | runner | `lane`, `task`, `status`, `model`, `cost_usd`, `cost_est`, `tokens_est`, `tokens_actual`, and on `task_end` `tokens_in`, `tokens_out`, `tokens_cache_read`, `tokens_cache_write`, `note` |
 | `item` | lane | `lane`, `kind`, `id`, `title`, `body`, `meta` |
 | `item_update` | lane | `id`, `patch` (deep-merged into the item; `meta` merges key by key) |
 | `item_action` | webapp | `id`, `action` |
-| `brief` | 2am fire | `date`, `accomplished[]`, `to_read[]`, `questions[]`, `tomorrow[]` |
+| `brief` | 2am fire | `date`, `accomplished[]`, `to_read[]`, `questions[]`, `tomorrow[]`, optional `usage` {spend_by_lane, spend_by_model, est_ratio, headroom_min, limit_hit} |
 | `plan_draft` | 10pm fire | `date`, `body` (plain text or light markdown) |
+| `plan_consumed` | 02:00 brief | `body`: Sam's plan.md input as it was read, before the file is cleared |
 | `plan_updated` `window_synced` | webapp | bookkeeping |
 
 ## Items
@@ -45,18 +47,24 @@ Kinds and the `meta` the webapp reads:
 | career | `resume` | `status` champion \| challenger \| rejected, `version`, `graders` {a, b}, `posting` |
 | career | `company` | `domain`, `url` |
 | career | `idea` | `why_now`, `kill_test` |
-| research | `digest` | `minutes`, `path`, `check` (question count), `check_score` "4 of 5" once taken |
+| research | `digest` | `minutes`, `path`, `check` (question count), `check_score` "4 of 5" once taken. The file ends with a `## Check` block the webapp parses; format in `config/lanes/research/LANE.md` |
 | research | `problem` | `pattern`, `due` yyyy-mm-dd, `status` queued \| open \| passed \| struggled, `path` |
 | research | `profile` | `side` strength \| gap, `evidence` (item id or check id) |
 | operations | `inbox` | `account`, `status` connected \| not_connected, `triaged` |
-| operations | `deletion` | `sender`, `count`, `account` |
+| operations | `deletion` | `sender`, `count`, `account`, `proposed`; after execution `executed` and `trashed` |
 | operations | `mission` | `updated` yyyy-mm-dd, `path` |
+| sim | `drill` | `lead`, `category`, `question`, `path`; `answered`, `score`, `retry` as it moves |
+| sim | `story` | `slug`, `path` |
+| sim | `feedback` | `drill`, `score`, `landed`, `missing`, `cut`, `path` |
+| system | `proposal` | `target` (repo path), `find`, `replace`, `path` to the write-up; after the retro runs `applied` + `branch`, or `failed` + `why` |
+
+Any item may carry `meta.question`: one sentence the user should answer; the morning brief lists it under questions.
 
 Unknown kinds still render, with title, body, and a plain kind pill. Add a kind before inventing a new lane field.
 
 ## User actions
 
-`item_action` values: `read`, `go`, `skip`, `explore`, `prune`, `add_target`, `approve`, `check` (with `result`). `skip` and `prune` hide the item. `go`, `explore`, `add_target`, `approve` tag it. A lane reads actions on its next fire to decide what to do next, for example a lead tagged `go` gets a tailored resume run.
+`item_action` values: `read`, `go`, `skip`, `explore`, `prune`, `add_target`, `approve`, `check` (with `result`), `rate` (with `value` up or down), `answer` (with `text`, on a drill). `skip` and `prune` hide the item. `go`, `explore`, `add_target`, `approve` tag it. A lane reads actions on its next fire to decide what to do next, for example a lead tagged `go` gets a tailored resume run.
 
 ## Brief
 

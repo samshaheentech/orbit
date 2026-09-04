@@ -1,0 +1,70 @@
+{
+ "orbit/career": {
+  "domains": [
+   "greenhouse.io",
+   "lever.co",
+   "ashbyhq.com",
+   "myworkdayjobs.com",
+   "linkedin.com",
+   "indeed.com",
+   "hired.com"
+  ],
+  "subject": [
+   "interview",
+   "application",
+   "recruiter",
+   "job alert",
+   "offer",
+   "phone screen",
+   "onsite"
+  ]
+ },
+ "orbit/receipts": {
+  "domains": [
+   "amazon.com",
+   "paypal.com",
+   "stripe.com",
+   "apple.com",
+   "uber.com",
+   "doordash.com"
+  ],
+  "subject": [
+   "receipt",
+   "invoice",
+   "order confirmation",
+   "your order",
+   "payment"
+  ]
+ },
+ "orbit/newsletters": {
+  "subject": [
+   "newsletter",
+   "digest",
+   "weekly",
+   "issue #",
+   "edition"
+  ],
+  "list_unsubscribe": true
+ },
+ "orbit/noise": {
+  "subject": [
+   "% off",
+   "sale",
+   "limited time",
+   "last chance",
+   "deal",
+   "promo",
+   "webinar",
+   "don't miss",
+   "unlock"
+  ],
+  "from_words": [
+   "noreply",
+   "no-reply",
+   "donotreply",
+   "marketing",
+   "promotions",
+   "notifications"
+  ]
+ }
+}

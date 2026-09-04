@@ -1,0 +1,76 @@
+#!/bin/bash
+# orbit — mission control for your life. Installed by install.sh as ~/.local/bin/orbit
+set -u
+ORBIT_HOME="${ORBIT_HOME:-$(cd "$(dirname "$(readlink "$0" 2>/dev/null || echo "$0")")/.." && pwd)}"
+RUNNER="com.sam.orbit-runner"; SERVER="com.sam.orbit-server"; PORT="${ORBIT_PORT:-4242}"
+cmd="${1:-help}"; shift || true
+
+case "$cmd" in
+  status)
+    echo "Orbit at $ORBIT_HOME"
+    q=$(ls "$ORBIT_HOME"/queue/*.md 2>/dev/null | grep -vc '/_' || true); echo "  queue      $q task(s)"
+    python3 - "$ORBIT_HOME" <<'PY'
+import json, sys, datetime as dt
+from pathlib import Path
+home = Path(sys.argv[1]); ev = home / "briefs" / "data" / "events.jsonl"
+sch = json.loads((home / "config" / "schedule.json").read_text()) if (home / "config" / "schedule.json").exists() else {"windows": [22, 3]}
+FIRES = sorted(sch["windows"]); now = dt.datetime.now(); h = now.hour + now.minute / 60
+nf = min([f for f in FIRES if f > h] or [min(FIRES)]); print("  next window %02d:00, budget %s%% each" % (nf, sch.get("budget_pct", 50)))
+if ev.exists():
+    rows = [json.loads(l) for l in ev.read_text().splitlines() if l.strip()]
+    last = [e for e in rows if e["type"] == "fire_end"]
+    if last: print("  last fire  %s  %s" % (last[-1]["ts"][:16].replace("T", " "), last[-1].get("note", "")))
+    lim = [e for e in rows if e["type"] == "fire_limit"]
+    if lim: print("  limit hit  %s" % lim[-1]["ts"][:16].replace("T", " "))
+w = home / "briefs" / "data" / "window.json"
+if w.exists():
+    d = json.loads(w.read_text());
+    if d.get("synced"): print("  window     %s min left, resets %s" % (d.get("minutes_left"), (d.get("reset_at") or "")[11:16]))
+PY
+    if curl -sf "http://localhost:$PORT/api/health" >/dev/null 2>&1; then echo "  server     online, http://localhost:$PORT"; else echo "  server     offline"; fi ;;
+  brief)
+    python3 - "$ORBIT_HOME" <<'PY'
+import json, sys
+from pathlib import Path
+ev = Path(sys.argv[1]) / "briefs" / "data" / "events.jsonl"
+b = [json.loads(l) for l in ev.read_text().splitlines() if l.strip() and '"brief"' in l] if ev.exists() else []
+b = [x for x in b if x.get("type") == "brief"]
+if not b: print("No brief yet. The 02:00 fire writes the first one."); sys.exit()
+b = b[-1]; print("Brief for %s\n" % b.get("date"))
+for k, t in (("accomplished", "Accomplished"), ("to_read", "To read"), ("questions", "Questions for you"), ("tomorrow", "Tomorrow")):
+    print(t); [print("  - " + (x["title"] if isinstance(x, dict) else x)) for x in b.get(k) or []] or print("  (nothing)"); print()
+u = b.get("usage") or {}
+if u: print("Usage"); [print("  %s: %s" % (k, v)) for k, v in u.items() if v not in (None, {}, [])]
+PY
+    ;;
+  add)
+    name="${1:?usage: orbit add <name>}"; f="$ORBIT_HOME/queue/$name.md"
+    [ -e "$f" ] && { echo "exists: $f"; exit 1; }
+    cp "$ORBIT_HOME/queue/_TEMPLATE.md" "$f" && echo "created $f" && "${EDITOR:-open}" "$f" ;;
+  fire)     ORBIT_MANUAL=1 bash "$ORBIT_HOME/run.sh" ;;
+  window)   python3 "$ORBIT_HOME/system/window.py" status ;;
+  backlog)  ls -1 "$ORBIT_HOME"/backlog/[0-9]*.md 2>/dev/null | xargs -n1 basename 2>/dev/null || echo "backlog empty" ;;
+  logs)     ls -t "$ORBIT_HOME"/logs/fire-*.err 2>/dev/null | head -1 | xargs -I{} tail -n "${1:-40}" {} ;;
+  pause)    launchctl bootout "gui/$(id -u)/$RUNNER" 2>/dev/null && echo "paused (server stays up)" || echo "runner not loaded" ;;
+  resume)   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$RUNNER.plist" 2>/dev/null && echo "resumed" || echo "already running or plist missing" ;;
+  open)     open "http://localhost:$PORT" ;;
+  estimates) python3 "$ORBIT_HOME/system/estimate.py" report ;;
+  assign)   python3 "$ORBIT_HOME/system/assign.py" "$@" ;;
+  help|*)
+    cat <<EOF
+orbit <command>
+  status      next fire, queue, last fire, window, server
+  brief       print the latest morning brief
+  add <name>  new task from the template, opens in \$EDITOR
+  fire        run a manual fire now (ignores the window budget)
+  window      window, budget, calibration, sessions this week
+  backlog     what's waiting for spare budget
+  logs [n]    tail the latest fire log
+  pause       stop the schedule (server keeps running)
+  resume      start the schedule again
+  open        open the webapp
+  estimates   estimate accuracy table
+  assign      model assignment analysis
+EOF
+    ;;
+esac

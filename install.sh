@@ -16,7 +16,11 @@ echo "    claude: $(claude --version 2>/dev/null | head -1)"
 echo "    python3: $(python3 --version)"
 
 echo "==> Creating directories..."
-mkdir -p "$ORBIT_HOME"/{queue,running,done,blocked,reports,logs,state,worktrees,system,config/lanes,briefs/data} "$LAUNCHD_DIR"
+mkdir -p "$ORBIT_HOME"/{queue,running,done,blocked,reports,logs,state/system,state/research,state/operations,state/career,worktrees,system,config/lanes,briefs/data/items,ramp} "$LAUNCHD_DIR"
+
+echo "==> Installing the orbit CLI..."
+mkdir -p "$HOME/.local/bin" && ln -sf "$ORBIT_HOME/bin/orbit" "$HOME/.local/bin/orbit" && chmod +x "$ORBIT_HOME/bin/orbit"
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) echo "    add to ~/.zshrc:  export PATH=\"\$HOME/.local/bin:\$PATH\"";; esac
 
 echo "==> Making scripts executable..."
 chmod +x "$ORBIT_HOME/run.sh" "$ORBIT_HOME/server.py" "$ORBIT_HOME/install.sh"

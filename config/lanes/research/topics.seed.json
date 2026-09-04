@@ -1,0 +1,92 @@
+[
+ {
+  "slug": "drive-thor-centralized-compute",
+  "title": "DRIVE Thor and the centralized compute stack",
+  "priority": 10,
+  "why": "NVIDIA is the top target; Thor is the product"
+ },
+ {
+  "slug": "cuda-for-embedded",
+  "title": "CUDA for embedded engineers",
+  "priority": 9,
+  "why": "gap: CUDA execution model"
+ },
+ {
+  "slug": "safety-critical-linux",
+  "title": "Safety-critical Linux: PREEMPT_RT, cgroups, isolation",
+  "priority": 8,
+  "why": "platform roles at autonomy companies"
+ },
+ {
+  "slug": "ros2-at-scale",
+  "title": "ROS 2 at scale: DDS, QoS, executors",
+  "priority": 7,
+  "why": "Waymo and Zoox adjacent stacks"
+ },
+ {
+  "slug": "functional-safety-ml",
+  "title": "Functional safety for ML pipelines (ISO 26262 meets SOTIF)",
+  "priority": 8,
+  "why": "bridges Bosch background to AI-heavy teams"
+ },
+ {
+  "slug": "systems-design-vocab",
+  "title": "Systems design interview vocabulary",
+  "priority": 9,
+  "why": "gap: interview language"
+ },
+ {
+  "slug": "python-under-pressure",
+  "title": "Python idioms under time pressure",
+  "priority": 8,
+  "why": "coding screens"
+ },
+ {
+  "slug": "hypervisors-automotive",
+  "title": "Hypervisors and mixed criticality on automotive SoCs",
+  "priority": 6,
+  "why": "centralized compute consolidation"
+ },
+ {
+  "slug": "perception-pipelines",
+  "title": "Perception pipelines on constrained compute",
+  "priority": 6,
+  "why": "Skydio and Figure adjacent"
+ },
+ {
+  "slug": "ota-fleet-data",
+  "title": "OTA updates and fleet data pipelines",
+  "priority": 5,
+  "why": "Ford fleet pipeline story"
+ },
+ {
+  "slug": "rust-in-embedded",
+  "title": "Rust in embedded and automotive",
+  "priority": 5,
+  "why": "where the industry is moving"
+ },
+ {
+  "slug": "hil-bench-orchestration",
+  "title": "HIL bench orchestration and CI for hardware",
+  "priority": 7,
+  "why": "the startup concept"
+ },
+ {
+  "slug": "llm-in-the-loop-validation",
+  "title": "LLM-in-the-loop validation for embedded",
+  "priority": 6,
+  "why": "startup endgame"
+ },
+ {
+  "slug": "memory-safety-c",
+  "title": "Memory safety in C at scale",
+  "priority": 5,
+  "why": "credibility for staff-level screens"
+ },
+ {
+  "slug": "staff-engineer-scope",
+  "title": "What staff engineers actually own",
+  "priority": 7,
+  "why": "targeting staff roles"
+ }
+]

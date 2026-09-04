@@ -161,6 +161,22 @@ a.btn{display:inline-block}
 .chip:hover{color:var(--tx)}
 .chip.on{color:var(--amber);border-color:var(--amber-line);background:var(--amber-wash)}
 .row.archived .t{color:var(--tx2)}
+.sheet-bg{position:fixed;inset:0;background:rgba(15,17,20,.72);z-index:8;display:flex;align-items:flex-start;justify-content:center;padding:60px 16px;overflow:auto}
+.sheet{width:100%;max-width:640px;background:var(--bg1);border:1px solid var(--line2);border-radius:8px;padding:22px 26px 20px}
+.sheet h2{margin-bottom:4px}
+.sheet .sub{color:var(--tx3);font-size:12.5px;margin-bottom:14px}
+.q{padding:12px 0;border-top:1px solid var(--line)}
+.q p{font-weight:500;margin-bottom:6px}
+.q label{display:block;padding:4px 0;color:var(--tx2);cursor:pointer}
+.q label:hover{color:var(--tx)}
+.q input{accent-color:var(--amber);margin-right:8px}
+.q.right p::after{content:"correct";color:var(--ok);font-weight:400;font-size:12px;margin-left:10px}
+.q.wrong p::after{content:"missed";color:var(--bad);font-weight:400;font-size:12px;margin-left:10px}
+.sheet-foot{display:flex;align-items:center;gap:14px;margin-top:14px;color:var(--tx2);font-size:13px}
+.rate{display:inline-flex;gap:4px;margin-left:2px}
+.rate .btn{padding:3px 8px;font-size:12px;color:var(--tx3)}
+.rate .btn.on{color:var(--amber);border-color:var(--amber-line)}
+.estline{color:var(--tx3);font-size:12.5px;margin:-30px 0 40px}
 .plan-foot{display:flex;align-items:center;gap:14px;margin-top:10px;color:var(--tx3);font-size:12.5px}
 
 @media (max-width:820px){
@@ -199,6 +215,7 @@ a.btn{display:inline-block}
       <a href="#career" data-p="career">Career <span id="n-career"></span></a>
       <a href="#research" data-p="research">Research <span id="n-research"></span></a>
       <a href="#operations" data-p="operations">Operations <span id="n-ops"></span></a>
+      <a href="#sim" data-p="sim">Sim <span id="n-sim"></span></a>
       <a href="#fires" data-p="fires">Fires <span id="n-fires"></span></a>
       <a href="#plan" data-p="plan">Plan</a>
     </nav>
@@ -230,20 +247,25 @@ a.btn{display:inline-block}
         <div class="tele">
           <div><small>Next fire</small><b id="t-next" class="live">—</b></div>
           <div><small>Window resets in</small><b id="t-reset">—<em id="t-reset-at"></em></b></div>
-          <div><small>Fires today</small><b id="t-fires">0<em>of 5</em></b></div>
+          <div><small>Sessions this week</small><b id="t-fires">0<em id="t-fires-of">of 14</em></b></div>
           <div><small>Spent today</small><b id="t-cost">$0.00<em>estimate</em></b></div>
         </div>
-        <p class="sync">Orbit can't see your session meter. <button id="sync" type="button">Sync the reset time</button> from Settings › Usage and the arc will follow it.</p>
+        <p class="sync">Orbit can't see your meter. <button id="sync" type="button">Sync the reset time</button> from Settings › Usage, or <button id="meter" type="button">enter a meter reading</button> during an Orbit window to calibrate the budget.</p>
       </div>
     </div>
 
-    <div class="kpis">
+    <div class="kpis" id="kpis">
       <div class="kpi"><small>Produced</small><b id="k-prod">—</b><i>items delivered this week</i></div>
       <div class="kpi"><small>Consumed</small><b id="k-cons">—</b><i>items you opened</i></div>
       <div class="kpi"><small>Fires this week</small><b id="k-fires">—</b><i>done / partial / blocked</i></div>
       <div class="kpi"><small>Cost this week</small><b id="k-cost">—</b><i>client-side estimate</i></div>
     </div>
 
+    <p class="estline" id="estline"></p>
+    <div class="sec" id="sys-sec" style="display:none">
+      <div class="sec-h"><h2>System</h2><span class="meta">the Sunday retro's proposed changes to Orbit itself; approved ones apply next Sunday on a branch</span></div>
+      <ul class="rows" id="list-proposal"></ul>
+    </div>
     <div class="sec" id="spend-sec">
       <div class="sec-h"><h2>Spend this week</h2><span class="meta">client-side estimates reported by each run</span></div>
       <div class="two"><div><h3>By lane</h3><ul class="spend" id="spend-lane"></ul></div><div><h3>By model</h3><ul class="spend" id="spend-model"></ul></div></div>
@@ -257,6 +279,7 @@ a.btn{display:inline-block}
         <div class="blk"><h3>To read</h3><div id="b-read"><p>Digests, leads, and ideas land here, newest first.</p></div></div>
         <div class="blk"><h3>Questions for you</h3><div id="b-q"><p>Anything the agent couldn't decide on its own.</p></div></div>
         <div class="blk"><h3>Tomorrow</h3><div id="b-tmr"><p>The 10pm fire drafts the plan. Your input goes in <a href="#plan">Plan</a>.</p></div></div>
+        <div class="blk"><h3>Usage</h3><div id="b-use"><p>Spend by lane and model, estimate accuracy, and window headroom, once the first brief lands.</p></div></div>
       </div>
     </div>
   </section>
@@ -323,7 +346,7 @@ a.btn{display:inline-block}
     <div class="sec">
       <div class="sec-h"><h2>Inboxes</h2><span class="meta">label and archive daily, never send</span></div>
       <ul class="rows" id="list-inbox"></ul>
-      <div class="empty" id="list-inbox-empty"><b>No inbox connected.</b><br>Fire 7 adds the Gmail connector.</div>
+      <div class="empty" id="list-inbox-empty"><b>No inbox connected.</b><br>Follow config/lanes/operations/SETUP.md once; the next fire connects on its own.</div>
     </div>
     <div class="sec">
       <div class="sec-h"><h2>Deletion proposals</h2><span class="meta">nothing is deleted until you approve it here</span></div>
@@ -338,6 +361,29 @@ a.btn{display:inline-block}
     <div class="sec" id="other-operations" style="display:none">
       <div class="sec-h"><h2>Other</h2><span class="meta">kinds the webapp has no layout for yet</span></div>
       <ul class="rows" id="list-other-operations"></ul>
+    </div>
+  </section>
+
+  <!-- ================= SIM ================= -->
+  <section class="panel" id="p-sim">
+    <div class="lane-h"><h1>Sim</h1><button class="btn" type="button" data-arch="sim" id="arch-sim">Show archived</button></div>
+    <div class="sec">
+      <div class="sec-h"><h2>Drills</h2><span class="meta">one question at a time; answer in the sim, graded overnight</span></div>
+      <ul class="rows" id="list-drill"></ul>
+      <div class="empty" id="list-drill-empty"><b>No drills yet.</b><br>Tag a lead go and the next fire builds its question set; otherwise one general drill a night.</div>
+    </div>
+    <div class="sec">
+      <div class="sec-h"><h2>Feedback</h2><span class="meta">what landed, what was missing, what to cut</span></div>
+      <ul class="rows" id="list-feedback"></ul>
+      <div class="empty" id="list-feedback-empty"><b>Nothing graded yet.</b><br>Answer a drill and the grade is here in the morning.</div>
+    </div>
+    <div class="sec">
+      <div class="sec-h"><h2>Stories</h2><span class="meta">STAR drafts from your bank; approve makes them canon</span></div>
+      <ul class="rows" id="list-story"></ul>
+      <div class="empty" id="list-story-empty"><b>No drafts yet.</b><br>One story a night from the bank.</div>
+    </div>
+    <div class="sec" id="other-sim" style="display:none">
+      <div class="sec-h"><h2>Other</h2></div><ul class="rows" id="list-other-sim"></ul>
     </div>
   </section>
 
@@ -372,7 +418,7 @@ a.btn{display:inline-block}
 
 <script>
 (function(){
-  const FIRES=[22,2,6,14,18];
+  let FIRES=[22,3];
   const WINDOW_H=5;
   const $=id=>document.getElementById(id);
   const pad=n=>String(n).padStart(2,'0');
@@ -389,7 +435,7 @@ a.btn{display:inline-block}
   const state={events:[],windowResetAt:null,arch:{},briefIdx:-1,ff:{lane:'',status:''}};
 
   /* routing */
-  const panels=['brief','career','research','operations','fires','plan'];
+  const panels=['brief','career','research','operations','sim','fires','plan'];
   function route(){
     const p=(location.hash||'#brief').slice(1);
     const cur=panels.includes(p)?p:'brief';
@@ -454,7 +500,7 @@ a.btn{display:inline-block}
     });
     $('sats').innerHTML=s;
     $('big').textContent=fmtDur(nf.at-now);
-    $('biglbl').textContent=`to the ${pad(nf.hour)}:00 fire`;
+    $('biglbl').textContent=`to the ${pad(nf.hour)}:00 window`;
     $('t-next').textContent=`${pad(nf.hour)}:00`;
     $('rail-next').textContent=`${pad(nf.hour)}:00`;
     const win=$('win');
@@ -472,8 +518,15 @@ a.btn{display:inline-block}
       $('winlbl').textContent='window not synced';
       $('t-reset').firstChild.textContent='—'; $('t-reset-at').textContent='';
     }
-    $('t-fires').firstChild.textContent=String(firesToday(state.events,now));
+    const wk=new Date(now); wk.setDate(now.getDate()-((now.getDay()+6)%7)); wk.setHours(0,0,0,0);
+    $('t-fires').firstChild.textContent=String(state.events.filter(e=>e.type==='window_start'&&new Date(e.ts)>=wk).length);
   }
+  $('meter').addEventListener('click',async()=>{
+    const v=prompt('What does Settings › Usage show for the current 5-hour window? Enter the percent, e.g. 37.');
+    if(!v)return; const pct=parseFloat(v); if(!(pct>0&&pct<=100)){alert('A number from 1 to 100.');return;}
+    try{ const r=await fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'meter_reading',pct})}); if(!r.ok)throw 0; toast('Reading saved. The next fire recalibrates the budget.'); }
+    catch(e){ toast("Couldn't save the reading. Is the server running?"); }
+  });
   $('sync').addEventListener('click',()=>{
     const v=prompt('When does your session window reset? Enter a time like 23:40, from Settings › Usage.');
     if(!v)return;
@@ -486,6 +539,7 @@ a.btn{display:inline-block}
   });
   const saved=localStorage.getItem('orbit.windowResetAt');
   if(saved){ const d=new Date(saved); if(d>new Date()) state.windowResetAt=d; }
+  fetch('/data/window.json').then(r=>r.ok?r.json():null).then(w=>{ if(!w)return; if(Array.isArray(w.windows)&&w.windows.length){FIRES=w.windows;} if(w.weekly_sessions_max)$('t-fires-of').textContent='of '+w.weekly_sessions_max; if(!state.windowResetAt&&w.reset_at){ const d=new Date(w.reset_at); if(d>new Date()) state.windowResetAt=d; } renderRing(); }).catch(()=>{});
 
   /* items: fold the log into current state */
   function reduceItems(){
@@ -496,7 +550,9 @@ a.btn{display:inline-block}
       else if(e.type==='item_action'&&items.has(e.id)){ const it=items.get(e.id);
         if(e.action==='read')it.read=true; else if(e.action==='skip'||e.action==='prune'){it.hidden=true;it.last=e.action;}
         else if(['go','explore','add_target','approve'].includes(e.action)){it.tag=e.action.replace('_',' ');it.read=true;}
-        else if(e.action==='check'&&e.result){it.meta.check_score=e.result;it.read=true;} }
+        else if(e.action==='check'&&e.result){it.meta.check_score=e.result;it.read=true;}
+        else if(e.action==='rate'){it.rating=e.value;}
+        else if(e.action==='answer'){it.answered=true;it.read=true;it.meta.answer=e.text;} }
     }
     return [...items.values()].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
   }
@@ -507,15 +563,19 @@ a.btn{display:inline-block}
     problem:i=>right(i,pill({passed:'ok',struggled:'bad',open:'warn'}[i.meta.status]||'',i.meta.status==='open'&&i.meta.due?'due '+new Date(i.meta.due+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}):(i.meta.status||'queued'))),
     inbox:i=>right(i,pill(i.meta.status==='connected'?'ok':'',(i.meta.status||'not connected').replace('_',' '))),
     deletion:i=>right(i,`<span class="pill">${i.meta.count??''} from ${esc(i.meta.sender||'')}</span>`),
-    idea:i=>right(i,''), company:i=>right(i,''), mission:i=>right(i,'')
+    idea:i=>right(i,''), company:i=>right(i,''), mission:i=>right(i,''),
+    drill:i=>right(i,i.meta.score?pill(i.meta.score>=4?'ok':'warn',i.meta.score+'/5'):i.answered?pill('','answered'):pill('',i.meta.category||'drill')),
+    feedback:i=>right(i,pill((i.meta.score|0)>=4?'ok':'warn',(i.meta.score||'?')+'/5')),
+    story:i=>right(i,i.tag?'':pill('warn','draft')),
+    proposal:i=>right(i,i.meta.applied?pill('ok','applied '+i.meta.applied):i.meta.failed?pill('bad','failed'):(i.tag?'':pill('warn','proposed')))
   };
-  const ACTIONS={lead:[['go','Tag go'],['skip','Skip']],resume:[['approve','Approve'],['skip','Skip']],company:[['add_target','Add to targets'],['skip','Skip']],idea:[['explore','Explore'],['prune','Prune']],digest:[['read','Mark read']],problem:[['read','Mark read']],inbox:[],deletion:[['approve','Approve'],['skip','Skip']],mission:[]};
+  const ACTIONS={lead:[['go','Tag go'],['skip','Skip']],resume:[['approve','Approve'],['skip','Skip']],company:[['add_target','Add to targets'],['skip','Skip']],idea:[['explore','Explore'],['prune','Prune']],digest:[['check','Check'],['read','Mark read']],problem:[['read','Mark read']],inbox:[],deletion:[['approve','Approve'],['skip','Skip']],mission:[],proposal:[['approve','Approve'],['skip','Skip']],drill:[['answer','Answer']],story:[['approve','Approve'],['skip','Send back']],feedback:[['read','Mark read']]};
   const TAGGING=['go','explore','add_target','approve'];
   function buttons(i){
     if(i.hidden||(i.kind==='resume'&&i.meta.status==='champion'))return '';
-    const acts=(ACTIONS[i.kind]||[['read','Mark read']]).filter(([a])=>!(a==='read'&&i.read)&&!(i.tag&&TAGGING.includes(a)));
+    const acts=(ACTIONS[i.kind]||[['read','Mark read']]).filter(([a])=>!(a==='read'&&i.read)&&!(i.tag&&TAGGING.includes(a))&&!(a==='check'&&(!i.meta.check||i.meta.check_score||!i.meta.path))&&!(a==='answer'&&i.answered));
     const open=i.meta.path?`<a class="btn" href="${esc(String(i.meta.path).replace(/^.*?briefs\//,'/'))}" target="_blank" rel="noopener">Open</a>`:'';
-    return open+acts.map(([a,l])=>`<button class="btn${['go','explore','approve'].includes(a)?' pri':''}" data-act="${a}" data-id="${esc(i.id)}">${l}</button>`).join('');
+    return open+acts.map(([a,l])=>a==='check'?`<button class="btn pri" data-check="${esc(i.id)}">Check (${i.meta.check})</button>`:a==='answer'?`<button class="btn pri" data-answer="${esc(i.id)}">Answer</button>`:`<button class="btn${['go','explore','approve'].includes(a)?' pri':''}" data-act="${a}" data-id="${esc(i.id)}">${l}</button>`).join('');
   }
   const pill=(c,t)=>`<span class="pill ${c}">${esc(t)}</span>`;
   function right(i,main){
@@ -523,18 +583,20 @@ a.btn{display:inline-block}
     const sub=i.kind==='lead'&&i.meta.company?'':(i.kind==='digest'&&i.meta.minutes?'':'');
     const body=i.kind==='idea'&&(i.meta.why_now||i.meta.kill_test)?`Why now: ${esc(i.meta.why_now||'')} Kill test: ${esc(i.meta.kill_test||'')}`:esc(i.body||'');
     const arch=i.hidden?pill('',i.last==='prune'?'pruned':'skipped'):'';
-    return `<li class="row${i.read||i.hidden?'':' unread'}${i.hidden?' archived':''}" data-id="${esc(i.id)}"><div class="t">${esc(i.title)}${sub}</div><div class="d">${body}</div><div class="r">${main}${t}${arch}${buttons(i)}</div></li>`;
+    const rate=i.hidden?'':`<span class="rate"><button class="btn${i.rating==='up'?' on':''}" data-rate="up" data-id="${esc(i.id)}" title="Good output">Good</button><button class="btn${i.rating==='down'?' on':''}" data-rate="down" data-id="${esc(i.id)}" title="Poor output">Poor</button></span>`;
+    return `<li class="row${i.read||i.hidden?'':' unread'}${i.hidden?' archived':''}" data-id="${esc(i.id)}"><div class="t">${esc(i.title)}${sub}</div><div class="d">${body}</div><div class="r">${main}${t}${arch}${buttons(i)}${rate}</div></li>`;
   }
   function renderItems(){
     const items=reduceItems(); state.items=items;
-    const kinds=['lead','resume','company','idea','digest','problem','inbox','deletion','mission'];
+    const kinds=['lead','resume','company','idea','digest','problem','inbox','deletion','mission','proposal','drill','feedback','story'];
     kinds.forEach(k=>{
       const list=items.filter(i=>i.kind===k&&(!i.hidden||state.arch[i.lane])), el=$('list-'+k), em=$('list-'+k+'-empty');
       if(!el)return;
       el.innerHTML=list.map(i=>(rowHTML[k]||(x=>right(x,pill('',x.kind))))(i)).join('');
-      em.style.display=list.length?'none':'';
+      if(em)em.style.display=list.length?'none':'';
+      if(k==='proposal')$('sys-sec').style.display=list.length?'':'none';
     });
-    ['career','research','operations'].forEach(l=>{
+    ['career','research','operations','sim'].forEach(l=>{
       const other=items.filter(i=>i.lane===l&&!kinds.includes(i.kind)&&i.kind!=='profile'&&(!i.hidden||state.arch[l]));
       const n=items.filter(i=>i.lane===l&&i.hidden).length;
       $('arch-'+l).textContent=(state.arch[l]?'Hide archived':'Show archived')+(n?` (${n})`:'');
@@ -546,7 +608,7 @@ a.btn{display:inline-block}
     $('list-gap').innerHTML=prof.filter(i=>i.meta.side==='gap').map(i=>`<li>${esc(i.title)}${i.meta.evidence?`<small>${esc(i.meta.evidence)}</small>`:''}</li>`).join('');
     $('list-profile-empty').style.display=prof.length?'none':'';
     const unread=lane=>items.filter(i=>i.lane===lane&&!i.read&&!i.hidden).length||'';
-    $('n-career').textContent=unread('career'); $('n-research').textContent=unread('research'); $('n-ops').textContent=unread('operations');
+    $('n-career').textContent=unread('career'); $('n-research').textContent=unread('research'); $('n-ops').textContent=unread('operations'); $('n-sim').textContent=unread('sim');
   }
   function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3200); }
   document.addEventListener('click',async ev=>{
@@ -557,10 +619,87 @@ a.btn{display:inline-block}
     try{ const r=await fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'item_action',id,action})}); if(!r.ok)throw 0; }
     catch(e){ toast("Couldn't save that. Is the server running?"); }
   });
+  document.addEventListener('click',async ev=>{
+    const b=ev.target.closest('button[data-rate]'); if(!b)return;
+    const id=b.dataset.id, value=b.dataset.rate;
+    state.events.push({type:'item_action',id,action:'rate',value,ts:new Date().toISOString(),source:'webapp'});
+    renderItems();
+    try{ const r=await fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'item_action',id,action:'rate',value})}); if(!r.ok)throw 0; }
+    catch(e){ toast("Couldn't save the rating. Is the server running?"); }
+  });
   document.addEventListener('click',ev=>{
     const b=ev.target.closest('button[data-arch]'); if(!b)return;
     state.arch[b.dataset.arch]=!state.arch[b.dataset.arch]; renderItems();
   });
+  /* digest check: parse the ## Check block, ask, score, post item_action check */
+  function parseCheck(md){
+    const i=md.indexOf('## Check'); if(i<0)return null;
+    const lines=md.slice(i).split('\n'); const qs=[]; let cur=null; let key={};
+    for(const raw of lines){
+      const l=raw.trim();
+      let m;
+      if((m=l.match(/^(\d+)\.\s+(.*)$/))){ cur={n:+m[1],text:m[2],opts:[]}; qs.push(cur); }
+      else if(cur&&(m=l.match(/^([a-d])\)\s+(.*)$/i))){ cur.opts.push({k:m[1].toLowerCase(),text:m[2]}); }
+      else if((m=l.match(/<!--\s*answers:\s*([^>]*?)\s*-->/i))){ m[1].trim().split(/\s+/).forEach(t=>{const mm=t.match(/^(\d+)([a-d])$/i); if(mm)key[+mm[1]]=mm[2].toLowerCase();}); }
+    }
+    return qs.length&&Object.keys(key).length?{qs,key}:null;
+  }
+  async function openCheck(id){
+    const it=(state.items||[]).find(i=>i.id===id); if(!it)return;
+    const href=String(it.meta.path).replace(/^.*?briefs\//,'/');
+    let md=''; try{ md=await (await fetch(href)).text(); }catch(e){ toast("Couldn't load the digest."); return; }
+    const c=parseCheck(md); if(!c){ toast('This digest has no check block.'); return; }
+    const bg=document.createElement('div'); bg.className='sheet-bg'; bg.id='sheet';
+    bg.innerHTML=`<div class="sheet" role="dialog" aria-label="Check"><h2>${esc(it.title)}</h2><div class="sub">${c.qs.length} questions, one answer each. Your score updates your profile.</div>`+
+      c.qs.map(q=>`<div class="q" data-n="${q.n}"><p>${q.n}. ${esc(q.text)}</p>${q.opts.map(o=>`<label><input type="radio" name="q${q.n}" value="${o.k}">${o.k}) ${esc(o.text)}</label>`).join('')}</div>`).join('')+
+      `<div class="sheet-foot"><button class="btn pri" id="check-submit" type="button">Submit</button><button class="btn" id="check-close" type="button">Close</button><span id="check-score"></span></div></div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click',e=>{ if(e.target===bg)bg.remove(); });
+    $('check-close').addEventListener('click',()=>bg.remove());
+    $('check-submit').addEventListener('click',async()=>{
+      let right=0;
+      c.qs.forEach(q=>{ const sel=bg.querySelector(`input[name="q${q.n}"]:checked`); const ok=sel&&sel.value===c.key[q.n]; if(ok)right++; const el=bg.querySelector(`.q[data-n="${q.n}"]`); el.classList.add(ok?'right':'wrong'); });
+      const result=`${right} of ${c.qs.length}`;
+      $('check-score').textContent=result; $('check-submit').disabled=true;
+      state.events.push({type:'item_action',id,action:'check',result,ts:new Date().toISOString(),source:'webapp'});
+      renderItems(); renderKpis();
+      try{ const r=await fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'item_action',id,action:'check',result})}); if(!r.ok)throw 0; }
+      catch(e){ toast("Couldn't save the score. Is the server running?"); }
+    });
+  }
+  document.addEventListener('click',ev=>{ const b=ev.target.closest('button[data-check]'); if(b)openCheck(b.dataset.check); });
+  /* the sim: one drill, your answer, dictation if the browser has it */
+  function openSim(id){
+    const it=(state.items||[]).find(i=>i.id===id); if(!it)return;
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const bg=document.createElement('div'); bg.className='sheet-bg'; bg.id='sheet';
+    bg.innerHTML=`<div class="sheet" role="dialog" aria-label="Sim"><h2>${esc(it.meta.category||'drill')}</h2><div class="sub">${esc(it.meta.lead&&it.meta.lead!=='general'?'for '+it.meta.lead:'general drill')}. Aim for 90 seconds. Graded overnight.</div>
+      <p style="font-weight:500;margin:6px 0 12px">${esc(it.meta.question||it.title)}</p>
+      <textarea id="sim-text" placeholder="Say it the way you'd say it in the room."></textarea>
+      <div class="sheet-foot"><button class="btn pri" id="sim-submit" type="button">Submit</button><button class="btn" id="sim-dictate" type="button">${SR?'Dictate':'Dictate (open in Chrome)'}</button><button class="btn" id="sim-close" type="button">Close</button><span id="sim-status"></span></div></div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click',e=>{ if(e.target===bg)bg.remove(); }); $('sim-close').addEventListener('click',()=>bg.remove());
+    let rec=null;
+    $('sim-dictate').addEventListener('click',()=>{
+      if(!SR){ toast('This browser has no speech recognition; Chrome does.'); return; }
+      if(rec){ rec.stop(); rec=null; $('sim-dictate').textContent='Dictate'; return; }
+      rec=new SR(); rec.continuous=true; rec.interimResults=true; rec.lang='en-US';
+      const base=$('sim-text').value; let finalText='';
+      rec.onresult=e=>{ let interim=''; for(let k=e.resultIndex;k<e.results.length;k++){ const r=e.results[k]; if(r.isFinal)finalText+=r[0].transcript+' '; else interim+=r[0].transcript; } $('sim-text').value=(base+' '+finalText+interim).trim(); };
+      rec.onerror=e=>{ toast('Dictation stopped: '+e.error); rec=null; $('sim-dictate').textContent='Dictate'; };
+      rec.onend=()=>{ if(rec){ rec=null; $('sim-dictate').textContent='Dictate'; } };
+      rec.start(); $('sim-dictate').textContent='Stop';
+    });
+    $('sim-submit').addEventListener('click',async()=>{
+      const text=$('sim-text').value.trim(); if(!text){ $('sim-status').textContent='Nothing to submit.'; return; }
+      if(rec){ rec.stop(); rec=null; }
+      state.events.push({type:'item_action',id,action:'answer',text,ts:new Date().toISOString(),source:'webapp'});
+      renderItems(); renderKpis();
+      try{ const r=await fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'item_action',id,action:'answer',text})}); if(!r.ok)throw 0; $('sim-status').textContent='Submitted. Graded in the next heavy fire.'; $('sim-submit').disabled=true; }
+      catch(e){ toast("Couldn't save the answer. Is the server running?"); }
+    });
+  }
+  document.addEventListener('click',ev=>{ const b=ev.target.closest('button[data-answer]'); if(b)openSim(b.dataset.answer); });
   const modelName=m=>/fable/.test(m||'')?'Fable 5.1':/sonnet/.test(m||'')?'Sonnet 5':/haiku/.test(m||'')?'Haiku 4.5':(m||'unknown');
   function renderSpend(){
     const wk=Date.now()-7*864e5;
@@ -585,6 +724,11 @@ a.btn{display:inline-block}
     $('b-read').innerHTML=b.to_read&&b.to_read.length?`<ul>${b.to_read.map(x=>{const it=(state.items||[]).find(i=>i.id===x.id);const lane=it?it.lane:'';return `<li><a href="#${lane||'brief'}">${esc(x.title||x.id)}</a></li>`;}).join('')}</ul>`:'<p>Nothing this time.</p>';
     $('b-q').innerHTML=list(b.questions);
     $('b-tmr').innerHTML=list(b.tomorrow);
+    const u=b.usage;
+    if(u){ const money=o=>Object.entries(o||{}).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${esc(k)} $${(+v).toFixed(2)}`).join(', ');
+      const parts=[]; if(u.spend_by_lane&&Object.keys(u.spend_by_lane).length)parts.push('By lane: '+money(u.spend_by_lane)); if(u.spend_by_model&&Object.keys(u.spend_by_model).length)parts.push('By model: '+money(u.spend_by_model));
+      if(u.est_ratio!=null)parts.push(`Actual ran ${u.est_ratio}x the estimate`); if(u.headroom_min!=null)parts.push(`${fmtDur(u.headroom_min*60000)} of window left at brief time`); if(u.limit_hit)parts.push('A usage limit was hit; heavy tasks paused for one window');
+      $('b-use').innerHTML=parts.length?`<ul>${parts.map(x=>`<li>${x}</li>`).join('')}</ul>`:'<p>No spend recorded.</p>'; }
   }
   $('brief-prev').addEventListener('click',()=>{ const n=state.events.filter(e=>e.type==='brief').length; const cur=state.briefIdx===-1?n-1:state.briefIdx; if(cur>0){state.briefIdx=cur-1;renderBrief();} });
   $('brief-next').addEventListener('click',()=>{ const n=state.events.filter(e=>e.type==='brief').length; if(state.briefIdx!==-1&&state.briefIdx<n-1){state.briefIdx++; if(state.briefIdx===n-1)state.briefIdx=-1; renderBrief();} });
@@ -637,6 +781,8 @@ a.btn{display:inline-block}
     const today=new Date().toDateString();
     const tc=state.events.filter(e=>e.type==='fire_end'&&new Date(e.ts).toDateString()===today).reduce((a,e)=>a+(+e.cost_usd||0),0);
     $('t-cost').firstChild.textContent='$'+tc.toFixed(2);
+    const ests=state.events.filter(e=>e.type==='task_end'&&new Date(e.ts)>wk&&+e.cost_est>0&&+e.cost_usd>0);
+    $('estline').textContent=ests.length?`Estimates this week: actual ran ${(ests.reduce((a,e)=>a+e.cost_usd/e.cost_est,0)/ests.length).toFixed(2)}x predicted across ${ests.length} runs.`:'';
     const last=[...state.events].reverse().find(e=>e.type==='fire_end'&&/remaining/.test(e.note||''));
     const m=last&&last.note.match(/(\d+) remaining/); $('rail-queue').textContent=m?m[1]:'—';
     if(!state.events.some(e=>e.type==='brief')) $('brief-date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});

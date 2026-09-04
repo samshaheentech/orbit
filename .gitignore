@@ -13,6 +13,7 @@ briefs/data/
 # two lines to commit them.
 config/lanes/career/resume/champion.md
 config/lanes/career/resume/approved/
+config/lanes/career/mission.md
 
 # OS
 .DS_Store

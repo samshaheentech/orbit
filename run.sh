@@ -37,11 +37,20 @@ STAMP="$(date +%Y-%m-%dT%H:%M:%S)"
 FIRE_ID="fire-$(date +%Y%m%d-%H%M%S)"
 
 log_event() {
-  # log_event <type> <lane> <task> <status> <model> <cost> <tokens_est> <tokens_actual> <note>
+  # log_event <type> <lane> <task> <status> <model> <cost> <tokens_est> <tokens_actual> <note> [<extra json object>]
   local ts; ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  printf '{"ts":"%s","fire":"%s","type":"%s","lane":"%s","task":"%s","status":"%s","model":"%s","cost_usd":%s,"tokens_est":%s,"tokens_actual":%s,"note":%s}\n' \
-    "$ts" "$FIRE_ID" "$1" "$2" "$3" "$4" "$5" "${6:-0}" "${7:-0}" "${8:-0}" "$(printf '%s' "${9:-}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')" \
-    >> "$EVENTS"
+  TS="$ts" FIRE="$FIRE_ID" T="$1" L="$2" K="$3" S="$4" M="$5" C="${6:-0}" TE="${7:-0}" TA="${8:-0}" N="${9:-}" X="${10:-{\}}" python3 - >> "$EVENTS" <<'PY'
+import json, os
+def num(v):
+    try: return float(v) if "." in str(v) else int(v)
+    except ValueError: return 0
+e = {"ts": os.environ["TS"], "fire": os.environ["FIRE"], "type": os.environ["T"], "lane": os.environ["L"], "task": os.environ["K"],
+     "status": os.environ["S"], "model": os.environ["M"], "cost_usd": num(os.environ["C"]), "tokens_est": num(os.environ["TE"]),
+     "tokens_actual": num(os.environ["TA"]), "note": os.environ["N"]}
+try: e.update(json.loads(os.environ.get("X") or "{}"))
+except ValueError: pass
+print(json.dumps(e))
+PY
 }
 
 fm() { sed -n '2,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1 | sed 's/[[:space:]]*#.*$//'; }
@@ -102,7 +111,23 @@ trap 'rm -rf "$LOCK"' EXIT
 
 command -v claude >/dev/null 2>&1 || { notify "not running" "claude not on PATH"; exit 1; }
 
-log_event "fire_start" "" "" "running" "" 0 0 0 ""
+# ---- window decision (Fire 10). launchd polls every 15 minutes; this decides whether to work.
+#      ORBIT_MANUAL=1 (orbit fire) skips the window logic and runs the old two-task fire.
+MODE="fire"; DEADLINE_EPOCH=0; BUDGET_LEFT="999999"; STARTS_WINDOW="false"; DECISION="{}"
+if [ -z "${ORBIT_MANUAL:-}" ]; then
+  DECISION="$(python3 "$ORBIT_HOME/system/window.py" decide 2>/dev/null || echo '{"mode":"fire"}')"
+  MODE="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("mode","fire"))' 2>/dev/null || echo fire)"
+  DEADLINE_EPOCH="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("deadline_epoch",0))' 2>/dev/null || echo 0)"
+  BUDGET_LEFT="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("budget_left_usd",999999))' 2>/dev/null || echo 999999)"
+  STARTS_WINDOW="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(str(json.load(sys.stdin).get("starts_window",False)).lower())' 2>/dev/null || echo false)"
+  if [ "$MODE" != "fire" ]; then exit 0; fi     # idle: nothing logged, nothing spent
+  MAX_TASKS_PER_RUN=99
+fi
+
+log_event "fire_start" "" "" "running" "" 0 0 0 "$(printf '%s' "$DECISION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("reason","manual"))' 2>/dev/null || echo manual)"
+if [ "$STARTS_WINDOW" = "true" ]; then
+  log_event "window_start" "" "" "open" "" 0 0 0 "orbit started this window" "$(printf '%s' "$DECISION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps({"reset_at": d.get("reset_at"), "budget_usd": d.get("budget_usd")}))' 2>/dev/null || echo '{}')"
+fi
 
 # ---- check for tasks ----
 PENDING=0
@@ -123,7 +148,24 @@ FIRE_SUMMARY=""
 STOP=0
 
 # ---- main task loop ----
-for TASK_FILE in "$Q"/*.md; do
+# Order: light tasks first, heavy tasks (weight: heavy, or Fable) last. After a usage limit in the last
+# 5 hours, heavy tasks are skipped this fire (logged once) so the window recovers on light work.
+LIMIT_RECENT=0
+if [ -f "$EVENTS" ] && python3 - "$EVENTS" <<'PY'
+import json, sys, datetime as dt
+now = dt.datetime.utcnow(); hit = False
+for l in open(sys.argv[1], encoding="utf-8"):
+    try: e = json.loads(l)
+    except ValueError: continue
+    if e.get("type") == "fire_limit" and now - dt.datetime.strptime(e["ts"][:19], "%Y-%m-%dT%H:%M:%S") < dt.timedelta(hours=5): hit = True
+sys.exit(0 if hit else 1)
+PY
+then LIMIT_RECENT=1; fi
+PULLS=0; STOP_FIRE=0
+while :; do
+ORDERED="$(for f in "$Q"/*.md; do [ -e "$f" ] || continue; w="$(fm "$f" weight)"; m="$(fm "$f" model)"; case "$w$m" in *heavy*|*fable*) echo "1 $f";; *) echo "0 $f";; esac; done | sort -k1,1 -k2,2 | cut -d' ' -f2-)"
+for TASK_FILE in $ORDERED; do
+  [ "$STOP_FIRE" -eq 1 ] && break
   [ -e "$TASK_FILE" ] || break
   [ "$STOP" -eq 1 ] && break
   [ "$PROCESSED" -ge "$MAX_TASKS_PER_RUN" ] && break
@@ -141,6 +183,24 @@ for TASK_FILE in "$Q"/*.md; do
   TOOLS="$DEFAULT_TOOLS${EXTRA_TOOLS:+,$EXTRA_TOOLS}"
   DIR="$(fm "$TASK_FILE" dir)"; DIR="${DIR:-$HOME}"; DIR="${DIR/#\~/$HOME}"
   EXEC="$(fm "$TASK_FILE" exec)"   # exec: <path> runs python3 <path> from ORBIT_HOME instead of claude -p
+
+  # days: / hours: gates. A task that isn't due stays in the queue untouched (no attempt, no log line).
+  DAYS="$(fm "$TASK_FILE" days | tr 'A-Z' 'a-z' | tr -d ' ')"; HOURS="$(fm "$TASK_FILE" hours | tr -d ' ')"
+  TODAY="$(date +%a | tr 'A-Z' 'a-z')"; HOURNOW="$(date +%H)"; HOURNOW="${HOURNOW#0}"
+  if [ -n "$DAYS" ] && ! printf ',%s,' "$DAYS" | grep -q ",$TODAY,"; then continue; fi
+  if [ -n "$HOURS" ] && ! printf ',%s,' "$HOURS" | grep -q ",${HOURNOW:-0},"; then continue; fi
+
+  # requires_mcp: <name>. Without a configured MCP server matching <name>, the task stays in the queue
+  # and one task_blocked event is logged per fire so the brief keeps pointing at the lane's SETUP.md.
+  REQ_MCP="$(fm "$TASK_FILE" requires_mcp)"
+  if [ -n "$REQ_MCP" ]; then
+    [ -n "${MCP_LIST+x}" ] || MCP_LIST="$(claude mcp list 2>/dev/null || true)"
+    if ! printf '%s' "$MCP_LIST" | grep -qi "$REQ_MCP"; then
+      log_event "task_blocked" "$LANE" "$NAME" "mcp_missing" "" 0 0 0 "needs MCP server '$REQ_MCP'; see config/lanes/$LANE/SETUP.md"
+      FIRE_SUMMARY="$FIRE_SUMMARY $NAME:NEEDS-MCP"
+      continue
+    fi
+  fi
 
   if [ ! -d "$DIR" ]; then
     log_event "task_blocked" "$LANE" "$NAME" "dir_missing" "$MODEL" 0 0 0 "dir not found: $DIR"
@@ -185,7 +245,7 @@ for TASK_FILE in "$Q"/*.md; do
   CONT=""
   [ "$ATT" -gt 1 ] && CONT="Attempt $ATT. Previous run worked in this worktree — check git log and git status first, then continue where it left off.
 "
-  export ORBIT_FIRE="$FIRE_ID" ORBIT_LANE="$LANE" ORBIT_HOME
+  export ORBIT_FIRE="$FIRE_ID" ORBIT_LANE="$LANE" ORBIT_TASK="$NAME" ORBIT_HOME
   PROMPT="User config: $CONFIG
 Task file: $TASK_FILE
 Working tree: $WT  Branch: $BRANCH
@@ -195,10 +255,30 @@ Deliver anything the user should see through the emitter, never by editing event
 ${CONT}$(cat "$TASK_FILE")"
 
   # Estimate tokens (rough: ~3 tokens/char of prompt)
+  WEIGHT="$(fm "$TASK_FILE" weight)"; case "$WEIGHT$MODEL" in *heavy*|*fable*) IS_HEAVY=1;; *) IS_HEAVY=0;; esac
+  if [ "$LIMIT_RECENT" -eq 1 ] && [ "$IS_HEAVY" -eq 1 ]; then
+    log_event "task_skipped" "$LANE" "$NAME" "limit_recovery" "$MODEL" 0 0 0 "heavy task skipped: usage limit hit in the last 5h"
+    mv "$TASK_FILE" "$Q/$NAME.md"; ATT=$((ATT-1)); echo "$ATT" > "$STATE/$NAME.attempts"; continue
+  fi
   PROMPT_CHARS="${#PROMPT}"
-  TOKENS_EST=$(( PROMPT_CHARS * 3 / 4 ))
+  EST_JSON="$(python3 "$ORBIT_HOME/system/estimate.py" predict --task "$NAME" --lane "$LANE" --model "$MODEL" --body-chars "$PROMPT_CHARS" 2>/dev/null || echo '{}')"
+  COST_EST="$(printf '%s' "$EST_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("cost_est",0))' 2>/dev/null || echo 0)"
+  TOKENS_EST="$(printf '%s' "$EST_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("tokens_est",0))' 2>/dev/null || echo 0)"
 
-  log_event "task_start" "$LANE" "$NAME" "running" "$MODEL" 0 "$TOKENS_EST" 0 "attempt $ATT"
+  if [ -z "${ORBIT_MANUAL:-}" ]; then
+    SECS_EST="$(printf '%s' "$EST_JSON" | python3 -c 'import json,sys; print(int(json.load(sys.stdin).get("secs_est",1200)))' 2>/dev/null || echo 1200)"
+    NOW_EPOCH="$(date +%s)"
+    if [ "$DEADLINE_EPOCH" -gt 0 ] && [ $((NOW_EPOCH + SECS_EST)) -gt "$DEADLINE_EPOCH" ]; then
+      log_event "fire_stop" "$LANE" "$NAME" "deadline" "$MODEL" 0 0 0 "not enough time before reset for $NAME (est ${SECS_EST}s)"
+      mv "$TASK_FILE" "$Q/$NAME.md"; ATT=$((ATT-1)); echo "$ATT" > "$STATE/$NAME.attempts"; STOP_FIRE=1; break
+    fi
+    if python3 -c 'import sys; sys.exit(0 if float(sys.argv[1]) + float(sys.argv[2]) > float(sys.argv[3]) else 1)' "$FIRE_COST_TOTAL" "$COST_EST" "$BUDGET_LEFT" 2>/dev/null; then
+      log_event "fire_stop" "$LANE" "$NAME" "budget" "$MODEL" 0 0 0 "window budget reached (spent \$$FIRE_COST_TOTAL of \$$BUDGET_LEFT left; $NAME est \$$COST_EST)"
+      mv "$TASK_FILE" "$Q/$NAME.md"; ATT=$((ATT-1)); echo "$ATT" > "$STATE/$NAME.attempts"; STOP_FIRE=1; break
+    fi
+  fi
+
+  log_event "task_start" "$LANE" "$NAME" "running" "$MODEL" 0 "$TOKENS_EST" 0 "attempt $ATT" "{\"cost_est\": $COST_EST}"
 
   START_SEC=$(date +%s)
   if [ -n "$EXEC" ]; then
@@ -231,7 +311,17 @@ ${CONT}$(cat "$TASK_FILE")"
   IS_ERR="$(jf "$OUT" is_error)"
   COST="$(jf "$OUT" total_cost_usd)"; COST="${COST:-0}"
   NEW_SID="$(jf "$OUT" session_id)"
+  USAGE_JSON="$(python3 - "$OUT" <<'PY' 2>/dev/null || echo '{}'
+import json, sys
+try: u = json.load(open(sys.argv[1])).get("usage") or {}
+except Exception: u = {}
+print(json.dumps({"tokens_in": u.get("input_tokens", 0), "tokens_out": u.get("output_tokens", 0),
+                  "tokens_cache_read": u.get("cache_read_input_tokens", 0), "tokens_cache_write": u.get("cache_creation_input_tokens", 0)}))
+PY
+)"
   fi
+  USAGE_JSON="${USAGE_JSON:-{\}}"
+  TOKENS_ACTUAL="$(printf '%s' "$USAGE_JSON" | python3 -c 'import json,sys; u=json.load(sys.stdin); print(int(u.get("tokens_in",0))+int(u.get("tokens_out",0)))' 2>/dev/null || echo 0)"
   [ "$IS_ERR" != "true" ] && [ -n "$NEW_SID" ] && echo "$NEW_SID" > "$STATE/$NAME.session"
 
   FIRE_COST_TOTAL="$(awk -v a="$FIRE_COST_TOTAL" -v b="$COST" 'BEGIN{printf "%.4f", a+b}')"
@@ -247,7 +337,9 @@ ${CONT}$(cat "$TASK_FILE")"
   fi
   [ "$RC" -eq 143 ] && STATUS="TIMEOUT"
 
-  log_event "task_end" "$LANE" "$NAME" "$STATUS" "$MODEL" "$COST" "$TOKENS_EST" 0 "attempt $ATT, ${ELAPSED}s, exit $RC"
+  EXTRA="$(printf '%s' "$USAGE_JSON" | python3 -c 'import json,sys; u=json.load(sys.stdin); u["cost_est"]=float(sys.argv[1] or 0); print(json.dumps(u))' "$COST_EST" 2>/dev/null || echo '{}')"
+  log_event "task_end" "$LANE" "$NAME" "$STATUS" "$MODEL" "$COST" "$TOKENS_EST" "$TOKENS_ACTUAL" "attempt $ATT, ${ELAPSED}s, exit $RC" "$EXTRA"
+  [ "$STATUS" = "DONE" ] || [ "$STATUS" = "PARTIAL" ] && python3 "$ORBIT_HOME/system/estimate.py" record --task "$NAME" --model "$MODEL" --predicted "$COST_EST" --actual "$COST" >/dev/null 2>&1 || true
 
   FIRE_SUMMARY="$FIRE_SUMMARY $NAME:$STATUS"
 
@@ -261,7 +353,7 @@ ${CONT}$(cat "$TASK_FILE")"
       mv "$TASK_FILE" "$Q/"
       ATT=$((ATT-1)); echo "$ATT" > "$STATE/$NAME.attempts"
       log_event "fire_limit" "" "" "stopped" "" 0 0 0 "usage limit hit, remaining tasks deferred"
-      STOP=1
+      STOP=1; STOP_FIRE=1
       ;;
     ERROR)
       mv "$TASK_FILE" "$Q/"
@@ -271,6 +363,21 @@ ${CONT}$(cat "$TASK_FILE")"
       mv "$TASK_FILE" "$Q/"
       ;;
   esac
+done
+  # Backlog: with budget and time left and nothing runnable in the queue, pull the next one-shot task.
+  [ "$STOP_FIRE" -eq 1 ] && break
+  [ "$STOP" -eq 1 ] && break
+  [ -n "${ORBIT_MANUAL:-}" ] && break
+  [ "$PROCESSED" -ge "$MAX_TASKS_PER_RUN" ] && break
+  # One pass over the queue per fire; only a backlog pull earns another pass (bounded by backlog_pulls_per_fire).
+  NEXT_BACKLOG="$(ls "$ORBIT_HOME"/backlog/[0-9]*.md 2>/dev/null | sort | head -1)"
+  MAXPULL="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("backlog_pulls_per_fire",3))' "$ORBIT_HOME/config/schedule.json" 2>/dev/null || echo 3)"
+  if [ -n "$NEXT_BACKLOG" ] && [ "$PULLS" -lt "$MAXPULL" ]; then
+    mv "$NEXT_BACKLOG" "$Q/"; PULLS=$((PULLS+1)); PENDING=$((PENDING+1))
+    log_event "backlog_pull" "" "$(basename "$NEXT_BACKLOG" .md)" "queued" "" 0 0 0 "pulled from backlog ($PULLS of $MAXPULL this fire)"
+    continue
+  fi
+  break
 done
 
 # Count remaining

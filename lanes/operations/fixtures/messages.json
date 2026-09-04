@@ -1,0 +1,72 @@
+[
+ {
+  "id": "m1",
+  "from": "Waymo Recruiting <no-reply@greenhouse.io>",
+  "subject": "Your application to Waymo",
+  "snippet": "Thanks for applying",
+  "list_unsubscribe": false,
+  "labels": [
+   "INBOX"
+  ]
+ },
+ {
+  "id": "m2",
+  "from": "Deals <promotions@bigstore.com>",
+  "subject": "50% off everything, last chance",
+  "snippet": "",
+  "list_unsubscribe": true,
+  "labels": [
+   "INBOX"
+  ]
+ },
+ {
+  "id": "m3",
+  "from": "Amazon <auto-confirm@amazon.com>",
+  "subject": "Your order confirmation",
+  "snippet": "",
+  "list_unsubscribe": false,
+  "labels": [
+   "INBOX"
+  ]
+ },
+ {
+  "id": "m4",
+  "from": "Ben Thompson <newsletter@stratechery.com>",
+  "subject": "Stratechery weekly",
+  "snippet": "",
+  "list_unsubscribe": true,
+  "labels": [
+   "INBOX"
+  ]
+ },
+ {
+  "id": "m5",
+  "from": "Toma <toma@example.com>",
+  "subject": "pool this weekend?",
+  "snippet": "",
+  "list_unsubscribe": false,
+  "labels": [
+   "INBOX"
+  ]
+ },
+ {
+  "id": "m6",
+  "from": "IRS <notices@irs.gov>",
+  "subject": "Notice about your tax return",
+  "snippet": "",
+  "list_unsubscribe": false,
+  "labels": [
+   "INBOX"
+  ]
+ },
+ {
+  "id": "m7",
+  "from": "Deals <promotions@bigstore.com>",
+  "subject": "Flash sale",
+  "snippet": "",
+  "list_unsubscribe": true,
+  "labels": [
+   "INBOX"
+  ]
+ }
+]

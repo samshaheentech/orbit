@@ -1,0 +1,15 @@
+{
+ "windows": [
+  22,
+  3
+ ],
+ "window_hours": 5,
+ "budget_pct": 50,
+ "fable_share_max": 0.5,
+ "weekly_sessions_max": 14,
+ "plan_at": "22:00",
+ "brief_at": "07:40",
+ "poll_minutes": 15,
+ "backlog_pulls_per_fire": 3,
+ "default_usd_per_pct": 0.08
+}

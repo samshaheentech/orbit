@@ -1,0 +1,13 @@
+{
+ "_schema": {
+  "sender": "email address, lowercased",
+  "account": "career|personal",
+  "label": "orbit/<label>",
+  "action": "keep|archive|propose_delete",
+  "count": "messages seen",
+  "first_seen": "yyyy-mm-dd",
+  "last_seen": "yyyy-mm-dd",
+  "note": "the model's one-line reason when it classified an unknown sender"
+ },
+ "senders": []
+}

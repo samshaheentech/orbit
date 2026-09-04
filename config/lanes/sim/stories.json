@@ -1,0 +1,82 @@
+{
+ "stories": [
+  {
+   "slug": "zero-to-one",
+   "title": "Joined six months into a live program with no repo, toolchain, CI/CD, or release process; built all of it and hit SOP on schedule",
+   "themes": [
+    "ownership",
+    "ambiguity",
+    "delivery"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "scheduler-jigsaw",
+   "title": "Owned the task scheduler; rebalanced function calls across periodic rates; the 'bugs' were scheduling conflicts",
+   "themes": [
+    "debugging",
+    "systems",
+    "realtime"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "memory-system",
+   "title": "60 repos of hand-edited linker files became a YAML source of truth with Python generators and Conan deploy; retired a full-time manual role",
+   "themes": [
+    "automation",
+    "scale",
+    "impact"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "dat-politics",
+   "title": "Germany consolidated integration control, NA got cut, the OEM killed 3.0; pivoted to an architect role through the architecture lead",
+   "themes": [
+    "adversity",
+    "influence",
+    "navigating orgs"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "hellsgamers",
+   "title": "At 12, ran a 250K-member community with Python and Lua and monetization; the tell-me-about-yourself opener",
+   "themes": [
+    "origin",
+    "initiative"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "requirements-authority",
+   "title": "Accept, negotiate, or decline authority over every OEM line item; the OEM-facing repo mirror; fleet data pipeline for future autonomy",
+   "themes": [
+    "stakeholders",
+    "judgment",
+    "scope"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "org-instinct",
+   "title": "Knew the profiles and limits of ~140 engineers and pre-empted where balls would drop",
+   "themes": [
+    "leadership",
+    "people"
+   ],
+   "status": "bank"
+  },
+  {
+   "slug": "centralized-compute",
+   "title": "NA product owner of software integration on the largest ADAS program, follow-the-sun with Germany, on a centralized ADAS compute platform",
+   "themes": [
+    "scale",
+    "platform",
+    "coordination"
+   ],
+   "status": "bank"
+  }
+ ]
+}
