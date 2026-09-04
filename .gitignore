@@ -8,6 +8,12 @@ worktrees/
 reports/
 briefs/data/
 
+# Personal documents: the resume carries a phone number and the repo is public.
+# They travel in the zip and live in the working tree, never in git. Delete these
+# two lines to commit them.
+config/lanes/career/resume/champion.md
+config/lanes/career/resume/approved/
+
 # OS
 .DS_Store
 

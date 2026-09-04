@@ -140,6 +140,7 @@ for TASK_FILE in "$Q"/*.md; do
   EXTRA_TOOLS="$(fm "$TASK_FILE" tools)"
   TOOLS="$DEFAULT_TOOLS${EXTRA_TOOLS:+,$EXTRA_TOOLS}"
   DIR="$(fm "$TASK_FILE" dir)"; DIR="${DIR:-$HOME}"; DIR="${DIR/#\~/$HOME}"
+  EXEC="$(fm "$TASK_FILE" exec)"   # exec: <path> runs python3 <path> from ORBIT_HOME instead of claude -p
 
   if [ ! -d "$DIR" ]; then
     log_event "task_blocked" "$LANE" "$NAME" "dir_missing" "$MODEL" 0 0 0 "dir not found: $DIR"
@@ -160,7 +161,7 @@ for TASK_FILE in "$Q"/*.md; do
 
   # Git worktree per task (if inside a repo)
   WT="$DIR"; BRANCH="(no-git)"
-  if git -C "$DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if [ -z "$EXEC" ] && git -C "$DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     TOP="$(git -C "$DIR" rev-parse --show-toplevel)"
     BRANCH="agent/$NAME"
     WT="$WORKTREES/$(basename "$TOP")-$NAME"
@@ -200,6 +201,19 @@ ${CONT}$(cat "$TASK_FILE")"
   log_event "task_start" "$LANE" "$NAME" "running" "$MODEL" 0 "$TOKENS_EST" 0 "attempt $ATT"
 
   START_SEC=$(date +%s)
+  if [ -n "$EXEC" ]; then
+    # exec: task. The script runs directly from ORBIT_HOME; its stdout is the result and ends
+    # with the same STATUS block. An optional "COST_USD: <n>" line reports what it spent.
+    OUT="${OUT%.json}.txt"
+    ( cd "$ORBIT_HOME" && run_with_timeout "$TASK_TIMEOUT_SEC" \
+      python3 "$ORBIT_HOME/$EXEC" > "$OUT" 2> "$ERR" ) && RC=0 || RC=$?
+    ELAPSED=$(( $(date +%s) - START_SEC ))
+    RESULT="$(cat "$OUT" 2>/dev/null || true)"
+    IS_ERR="false"; if [ "$RC" -ne 0 ] && [ "$RC" -ne 143 ]; then IS_ERR="true"; fi
+    COST="$(printf '%s\n' "$RESULT" | sed -n 's/^COST_USD:[[:space:]]*//p' | tail -1)"
+    case "$COST" in ''|*[!0-9.]*) COST=0;; esac
+    NEW_SID=""
+  else
   ( cd "$WT" && run_with_timeout "$TASK_TIMEOUT_SEC" \
     claude -p "$PROMPT" \
       --append-system-prompt-file "$SYSTEM_PROMPT" \
@@ -217,6 +231,7 @@ ${CONT}$(cat "$TASK_FILE")"
   IS_ERR="$(jf "$OUT" is_error)"
   COST="$(jf "$OUT" total_cost_usd)"; COST="${COST:-0}"
   NEW_SID="$(jf "$OUT" session_id)"
+  fi
   [ "$IS_ERR" != "true" ] && [ -n "$NEW_SID" ] && echo "$NEW_SID" > "$STATE/$NAME.session"
 
   FIRE_COST_TOTAL="$(awk -v a="$FIRE_COST_TOTAL" -v b="$COST" 'BEGIN{printf "%.4f", a+b}')"

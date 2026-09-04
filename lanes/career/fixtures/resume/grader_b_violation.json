@@ -1,0 +1,6 @@
+{
+  "champion": {"total": 60, "dims": {"scan": 22, "prestige": 18, "rulings": 20}},
+  "challenger": {"total": 68, "dims": {"scan": 38, "prestige": 30, "rulings": 0}},
+  "violations": ["Ruling 2: 'Youngest engineer in Bosch history to reach Senior Software Engineer — the terminal individual-contributor level' keeps an em-dash"],
+  "notes": "Fixture. Scan and prestige both improved and the margin clears +5, but one em-dash survives in the record line, so the challenger is disqualified on rulings alone."
+}

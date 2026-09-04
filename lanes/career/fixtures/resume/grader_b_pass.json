@@ -1,0 +1,6 @@
+{
+  "champion": {"total": 70, "dims": {"scan": 28, "prestige": 22, "rulings": 20}},
+  "challenger": {"total": 83, "dims": {"scan": 31, "prestige": 22, "rulings": 30}},
+  "violations": [],
+  "notes": "Fixture. Edit 2 (record first) moved scan up 3. Champion itself has em-dashes and does not open with the record; noted, not penalized as a violation since the champion is not on trial. Challenger breaks no ruling: no em-dashes, opens with the record, domain controller section first, no relocation line."
+}

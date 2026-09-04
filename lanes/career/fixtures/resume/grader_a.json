@@ -1,0 +1,6 @@
+{
+  "champion": {"total": 74, "dims": {"fit": 18, "ats": 16, "clarity": 19, "truthfulness": 21}},
+  "challenger": {"total": 83, "dims": {"fit": 22, "ats": 20, "clarity": 20, "truthfulness": 21}},
+  "violations": [],
+  "notes": "Fixture. Edit 1 (headline) and edit 3 (domain controller wording) moved fit up 4; edit 4 (HIL) and the skills reorder moved ats up 4; edit 6 (separators) moved clarity up 1. Truthfulness unchanged: every challenger claim traces to a champion bullet."
+}

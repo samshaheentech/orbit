@@ -40,7 +40,8 @@ Open `http://localhost:4242` in any browser. Always running on login.
 - Fire 3b — actions (tag, skip, explore, prune, approve, read), produced vs consumed, spend by lane and model. Done.
 - Fire 3c — brief history, per-lane archive, fires filter. Done.
 - Fire 4 — career lane: fetcher, scoring, leads/companies/ideas tasks. Done.
-- Fire 5 — blind resume loop. Next.
+- Fire 5 — blind resume loop: `exec:` tasks, orchestrator, three prompts, rulings, dry-run harness. Done.
+- Fire 6 — research and learning lane. Next.
 
 ## Architecture
 
@@ -49,7 +50,10 @@ Open `http://localhost:4242` in any browser. Always running on login.
 - `briefs/` — webapp and event log
 - `config/user.md` — your config (name, goals, targets, rubrics)
 - `config/lanes/` — one folder per lane (career, research, operations...)
-- `queue/` — tasks waiting to run
+- `config/lanes/career/resume/` — champion resume, locked rulings, the three loop prompts, approved variants
+- `lanes/` — lane scripts (`fetch_jobs.py`, `resume_loop.py`) and their fixtures
+- `queue/` — tasks waiting to run. A task with `exec: <script>` in its frontmatter runs that script directly instead of `claude -p`
+- `docs/handoffs/` — what each fire built and what it left open
 - `launchd/` — macOS scheduler plists
 - `system/prompt.md` — system prompt appended to every agent run
 - `system/data-contract.md` — the event shapes lanes write; read this before writing a lane

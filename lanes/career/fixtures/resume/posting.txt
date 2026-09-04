@@ -1,0 +1,28 @@
+Company: NVIDIA
+Title: Senior Software Engineer, DRIVE Platform Integration
+Location: Santa Clara, CA or Remote (US)
+
+NVIDIA DRIVE is the centralized compute platform for software-defined vehicles. The DRIVE Platform Integration team owns the path from silicon bring-up to a fully validated automotive software stack on DRIVE Thor: boot, memory layout, safety partitioning, the build and release system, and the integration of perception, planning, and parking stacks from multiple partners onto one SoC.
+
+What you will do
+- Own integration of partner and internal software stacks onto DRIVE Thor and DRIVE Orin based platforms, from bootloader through the Linux and QNX application layers.
+- Design and maintain the memory architecture, linker configuration, and hypervisor partitioning across safety and non-safety domains.
+- Run the build, CI/CD, and hardware-in-the-loop (HIL) validation infrastructure that gates every release to OEM customers.
+- Debug multi-core, cross-domain failures using hardware trace and JTAG tooling; be the last line of escalation for integration issues.
+- Negotiate integration requirements and release cadence with Tier 1 and OEM partners; write the integration specifications they build against.
+- Mentor engineers across sites and time zones; drive follow-the-sun integration with teams in the US, Europe, and India.
+
+What we need to see
+- 5+ years of embedded software on automotive or safety-critical platforms; ISO 26262 exposure.
+- Deep experience with bootloaders, linker scripts, memory maps, and multi-core debugging on ARM SoCs.
+- Hands-on ownership of a build and release system (CMake, Conan or similar, Jenkins or similar) for a large codebase with many contributors.
+- Experience integrating camera, radar, or ultrasonic stacks on a centralized domain controller.
+- Track record of shipping into production vehicles and of leading across OEM and Tier 1 boundaries.
+
+Nice to have
+- GPU-equipped SoC integration (Jetson, DRIVE, or comparable).
+- FPGA integration experience.
+- Production cybersecurity: secure boot, key management, diagnostic lockdown.
+- Experience growing and leading a distributed team.
+
+Base salary range: $215,000 to $290,000, plus equity and benefits. NVIDIA is an equal opportunity employer.
