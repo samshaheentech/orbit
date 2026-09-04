@@ -39,7 +39,8 @@ Open `http://localhost:4242` in any browser. Always running on login.
 - Fire 3a — data contract, emitter, live lane/brief/plan rendering. Done.
 - Fire 3b — actions (tag, skip, explore, prune, approve, read), produced vs consumed, spend by lane and model. Done.
 - Fire 3c — brief history, per-lane archive, fires filter. Done.
-- Fire 4 — career lane. Next.
+- Fire 4 — career lane: fetcher, scoring, leads/companies/ideas tasks. Done.
+- Fire 5 — blind resume loop. Next.
 
 ## Architecture
 

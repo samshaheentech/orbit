@@ -80,7 +80,7 @@ run_with_timeout() {
   "$@" & local pid=$!
   ( sleep "$secs"; kill -TERM "$pid" 2>/dev/null ) & local wd=$!
   wait "$pid"; local rc=$?
-  kill "$wd" 2>/dev/null; wait "$wd" 2>/dev/null
+  kill "$wd" 2>/dev/null; wait "$wd" 2>/dev/null || true
   return $rc
 }
 

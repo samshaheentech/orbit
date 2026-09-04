@@ -1,0 +1,17 @@
+[
+  {"name": "NVIDIA", "slug": "nvidia", "ats": "manual", "url": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite", "tier": 1, "keywords_extra": ["DRIVE", "Thor", "Orin", "autonomous vehicle"]},
+  {"name": "Waymo", "slug": "waymo", "ats": "manual", "url": "https://careers.withgoogle.com/teams/waymo", "tier": 1, "keywords_extra": ["self-driving", "autonomy"]},
+  {"name": "Qualcomm", "slug": "qualcomm", "ats": "workday", "tenant": "qualcomm", "wd_host": "wd12", "site": "External", "tier": 1, "keywords_extra": ["Snapdragon", "automotive", "ADAS"]},
+  {"name": "Zoox", "slug": "zoox", "ats": "lever", "token": "zoox", "tier": 1, "keywords_extra": ["robotaxi", "autonomy"]},
+  {"name": "Apple", "slug": "apple", "ats": "manual", "url": "https://jobs.apple.com/en-us/search?team=hardware-and-firmware-engineering-HRDWR-FRMW", "tier": 1, "keywords_extra": ["Special Projects"]},
+  {"name": "Google", "slug": "google", "ats": "manual", "url": "https://www.google.com/about/careers/applications/jobs/results", "tier": 1, "keywords_extra": ["Waymo", "hardware"]},
+  {"name": "Anduril", "slug": "anduril", "ats": "greenhouse", "token": "andurilindustries", "tier": 2, "keywords_extra": ["defense", "autonomy", "embedded"]},
+  {"name": "Skydio", "slug": "skydio", "ats": "manual", "url": "https://www.skydio.com/careers", "tier": 2, "keywords_extra": ["drone", "autonomy"]},
+  {"name": "Figure", "slug": "figure", "ats": "ashby", "name_param": "figure", "tier": 2, "keywords_extra": ["humanoid", "robotics"]},
+  {"name": "Applied Intuition", "slug": "applied-intuition", "ats": "manual", "url": "https://job-boards.greenhouse.io/appliedintuition", "tier": 2, "keywords_extra": ["simulation", "autonomy tooling"]},
+  {"name": "Rivian", "slug": "rivian", "ats": "manual", "url": "https://careers.rivian.com/work", "tier": 2, "keywords_extra": ["EV", "vehicle software"]},
+  {"name": "Tesla", "slug": "tesla", "ats": "manual", "url": "https://www.tesla.com/careers/search/?query=embedded", "tier": 2, "keywords_extra": ["Autopilot", "FSD", "embedded"]},
+  {"name": "Aurora", "slug": "aurora", "ats": "manual", "url": "https://boards.greenhouse.io/aurorainnovation", "tier": 2, "keywords_extra": ["trucking", "autonomy"]},
+  {"name": "Nuro", "slug": "nuro", "ats": "greenhouse", "token": "nuro", "tier": 2, "keywords_extra": ["delivery", "autonomy"]},
+  {"name": "SpaceX", "slug": "spacex", "ats": "manual", "url": "https://www.spacex.com/careers/jobs/", "tier": 2, "keywords_extra": ["avionics", "flight software"]}
+]

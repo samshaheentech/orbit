@@ -1,0 +1,20 @@
+{
+  "jobs": [
+    {
+      "title": "Staff Firmware Engineer, Humanoid Locomotion",
+      "location": "Sunnyvale, CA (On-site)",
+      "isRemote": false,
+      "jobUrl": "https://jobs.ashbyhq.com/figure/3000001",
+      "publishedAt": "2026-08-30T00:00:00Z",
+      "descriptionPlain": "On-site required, no remote option. Staff level, humanoid robotics firmware."
+    },
+    {
+      "title": "Senior Software Engineer, Robotics Infrastructure",
+      "location": "Remote (US)",
+      "isRemote": true,
+      "jobUrl": "https://jobs.ashbyhq.com/figure/3000002",
+      "publishedAt": "2026-08-29T00:00:00Z",
+      "descriptionPlain": "Remote, senior level, robotics infrastructure and simulation tooling. $190k-$240k."
+    }
+  ]
+}

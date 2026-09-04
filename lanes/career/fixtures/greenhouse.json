@@ -1,0 +1,25 @@
+{
+  "jobs": [
+    {
+      "title": "Senior Embedded Software Engineer, Autonomy",
+      "location": {"name": "Costa Mesa, CA or Remote (US)"},
+      "absolute_url": "https://job-boards.greenhouse.io/andurilindustries/jobs/1000001",
+      "updated_at": "2026-08-29T10:00:00-07:00",
+      "content": "Own firmware and platform integration for autonomous ground systems. Senior level, safety-critical."
+    },
+    {
+      "title": "Software Engineering Intern, Summer 2027",
+      "location": {"name": "Costa Mesa, CA"},
+      "absolute_url": "https://job-boards.greenhouse.io/andurilindustries/jobs/1000002",
+      "updated_at": "2026-08-28T10:00:00-07:00",
+      "content": "New grad and intern program, not for experienced engineers."
+    },
+    {
+      "title": "Staff Systems Engineer, Perception Infrastructure",
+      "location": {"name": "Remote (US)"},
+      "absolute_url": "https://job-boards.greenhouse.io/andurilindustries/jobs/1000003",
+      "updated_at": "2026-08-27T10:00:00-07:00",
+      "content": "Fully remote, staff level, perception infrastructure for robotics platforms. $230k-$300k."
+    }
+  ]
+}
