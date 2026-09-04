@@ -11,5 +11,23 @@
  "brief_at": "07:40",
  "poll_minutes": 15,
  "backlog_pulls_per_fire": 3,
- "default_usd_per_pct": 0.08
+ "default_usd_per_pct": 0.08,
+ "plan": "max",
+ "pro": {
+  "_note": "Claude Pro has much smaller usage limits than Max and no validated data on session shape yet. Default to 'fixed' mode: a handful of short fires at set hours, no unattended sweeping, so a new user never burns their whole day's quota on autonomous tasks before they've touched Claude themselves. Switch to 'window' mode only after watching orbit_status for a week and confirming there is real headroom being left unused.",
+  "mode": "fixed",
+  "fixed_fires": [
+   22,
+   6,
+   14
+  ],
+  "max_tasks_per_fire": 2,
+  "windows": [
+   22
+  ],
+  "window_hours": 2,
+  "budget_pct": 20,
+  "weekly_sessions_max": 5,
+  "default_usd_per_pct": 0.08
+ }
 }

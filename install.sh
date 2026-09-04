@@ -29,7 +29,7 @@ echo "==> Installing launchd jobs..."
 for LABEL in "$RUNNER_LABEL" "$SERVER_LABEL"; do
   SRC="$ORBIT_HOME/launchd/$LABEL.plist"
   DST="$LAUNCHD_DIR/$LABEL.plist"
-  sed "s|__ORBIT__|$ORBIT_HOME|g" "$SRC" > "$DST"
+  sed -e "s|__ORBIT__|$ORBIT_HOME|g" -e "s|__PYTHON3__|$PYTHON3_BIN|g" "$SRC" > "$DST"
   launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
   launchctl bootstrap "gui/$(id -u)" "$DST" 2>/dev/null || launchctl load "$DST"
   echo "    $LABEL: loaded"

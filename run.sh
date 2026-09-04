@@ -64,12 +64,19 @@ jf() {
 }
 
 model_flag() {
-  # Map friendly model names to claude CLI model strings
+  # Map a task's frontmatter model: value to a string the CLI's --model flag accepts.
+  # Claude Code takes either a short alias (sonnet, opus, haiku, fable) or a full model ID
+  # (claude-sonnet-5, claude-fable-5-1, claude-haiku-4-5-20251001, ...); both are valid, but
+  # full IDs are what Anthropic recommends for unattended automation, so that is what we emit
+  # for our own three models. Anything already alias-shaped or already a full "claude-*" ID is
+  # passed through untouched, so a task can also just say "model: sonnet" or a literal ID.
   case "$1" in
-    fable*|fable-5-1)   echo "claude-fable-5-1" ;;
-    sonnet-5|sonnet5)   echo "claude-sonnet-5" ;;
-    haiku*)             echo "claude-haiku-4-5-20251001" ;;
-    *)                  echo "$DEFAULT_MODEL" ;;
+    fable*)              echo "claude-fable-5-1" ;;
+    sonnet-5|sonnet5)    echo "claude-sonnet-5" ;;
+    haiku*)              echo "claude-haiku-4-5-20251001" ;;
+    claude-*)            echo "$1" ;;
+    sonnet|opus|best|opusplan) echo "$1" ;;
+    ""|*)                echo "$DEFAULT_MODEL" ;;
   esac
 }
 
@@ -121,7 +128,13 @@ if [ -z "${ORBIT_MANUAL:-}" ]; then
   BUDGET_LEFT="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("budget_left_usd",999999))' 2>/dev/null || echo 999999)"
   STARTS_WINDOW="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(str(json.load(sys.stdin).get("starts_window",False)).lower())' 2>/dev/null || echo false)"
   if [ "$MODE" != "fire" ]; then exit 0; fi     # idle: nothing logged, nothing spent
-  MAX_TASKS_PER_RUN=99
+  SWEEP="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(str(json.load(sys.stdin).get("sweep",True)).lower())' 2>/dev/null || echo true)"
+  if [ "$SWEEP" = "true" ]; then
+    MAX_TASKS_PER_RUN=99                        # plan: max — drain the window's budget
+  else
+    MAX_TASKS_PER_RUN="$(printf '%s' "$DECISION" | python3 -c 'import json,sys; print(int(json.load(sys.stdin).get("max_tasks_per_fire",2)))' 2>/dev/null || echo 2)"
+    DEADLINE_EPOCH=0; BUDGET_LEFT="999999"      # plan: pro / fixed — a plain capped fire, no sweep economics
+  fi
 fi
 
 log_event "fire_start" "" "" "running" "" 0 0 0 "$(printf '%s' "$DECISION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("reason","manual"))' 2>/dev/null || echo manual)"

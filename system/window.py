@@ -27,9 +27,24 @@ CAL = HOME / "state" / "system" / "calibration.json"
 
 
 def sched():
-    d = {"windows": [22, 3], "window_hours": 5, "budget_pct": 50, "weekly_sessions_max": 14, "default_usd_per_pct": 0.08, "brief_at": "07:40"}
-    if SCHED.exists():
-        d.update(json.loads(SCHED.read_text(encoding="utf-8")))
+    """Resolve the active schedule. plan: "max" uses the top-level fields (window sweep, as
+    designed for Sam's Max plan). plan: "pro" uses config["pro"], a deliberately conservative
+    default (a few short fixed-hour fires, no unattended sweeping) since Claude Pro's usage
+    limits are much smaller and not yet characterized against this design. "pro".mode can be
+    switched to "window" once real headroom is confirmed via orbit status."""
+    d = {"plan": "max", "windows": [22, 3], "window_hours": 5, "budget_pct": 50, "weekly_sessions_max": 14,
+         "default_usd_per_pct": 0.08, "brief_at": "07:40", "max_tasks_per_fire": 99, "mode": "window",
+         "fixed_fires": []}
+    raw = json.loads(SCHED.read_text(encoding="utf-8")) if SCHED.exists() else {}
+    plan = raw.get("plan", "max")
+    d["plan"] = plan
+    if plan == "pro":
+        pro = dict(raw.get("pro", {}))
+        d.update({k: v for k, v in pro.items() if not k.startswith("_")})
+        d.setdefault("mode", "fixed")
+    else:
+        d.update({k: v for k, v in raw.items() if k not in ("plan", "pro")})
+        d["mode"] = "window"
     return d
 
 
@@ -89,11 +104,17 @@ def calibration(ev, s):
 
 def decide(now):
     s = sched(); ev = events()
+    if s["mode"] == "fixed":
+        h = now.hour + now.minute / 60
+        due = any(0 <= (h - f + 24) % 24 <= 0.5 for f in s.get("fixed_fires", []))
+        return {"mode": "fire" if due else "idle", "plan": s["plan"], "sweep": False,
+                "max_tasks_per_fire": s.get("max_tasks_per_fire", 2),
+                "reason": "fixed-hour fire" if due else "not a fixed fire hour, plan is pro/fixed"}
     cal = calibration(ev, s)
     slot = current_slot(now, s)
     week_start = (now - dt.timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
     sessions = [e for e in window_starts(ev) if ts(e) >= week_start]
-    base = {"now": now.isoformat(timespec="minutes"), "usd_per_pct": cal["usd_per_pct"], "calibration": cal["basis"],
+    base = {"now": now.isoformat(timespec="minutes"), "usd_per_pct": cal["usd_per_pct"], "calibration": cal["basis"], "plan": s["plan"], "sweep": True,
             "sessions_this_week": len(sessions), "weekly_sessions_max": s["weekly_sessions_max"]}
     if not slot:
         return {**base, "mode": "idle", "starts_window": False, "reason": "outside Orbit's windows"}
@@ -123,19 +144,21 @@ def decide(now):
 def status(now):
     s = sched(); ev = events()
     d = decide(now)
-    since = now - dt.timedelta(hours=s["window_hours"])
+    since = now - dt.timedelta(hours=s.get("window_hours", 5))
     spend = {}
     for e in ev:
         if e.get("type") == "task_end" and ts(e) > since:
             k = e.get("lane") or "general"; spend[k] = round(spend.get(k, 0) + float(e.get("cost_usd") or 0), 4)
+    windows_list = s.get("fixed_fires") if s["mode"] == "fixed" else s.get("windows", [])
     nxt = None
-    for h in sorted(s["windows"]):
+    for h in sorted(windows_list or [22]):
         cand = now.replace(hour=h, minute=0, second=0, microsecond=0)
         if cand > now: nxt = cand; break
     if nxt is None:
         nxt = (now + dt.timedelta(days=1)).replace(hour=min(s["windows"]), minute=0, second=0, microsecond=0)
     out = {**d, "synced": d.get("mode") != "idle" or "reset_at" in d, "minutes_left": (int((dt.datetime.fromisoformat(d["reset_at"]) - now).total_seconds() // 60) if "reset_at" in d else None),
-           "last_window_spend": spend, "next_window": nxt.isoformat(timespec="minutes"), "budget_pct": s["budget_pct"], "windows": s["windows"], "brief_at": s["brief_at"]}
+           "last_window_spend": spend, "next_window": nxt.isoformat(timespec="minutes"), "budget_pct": s.get("budget_pct"),
+           "windows": windows_list, "brief_at": s.get("brief_at", "07:40"), "mode": s["mode"], "weekly_sessions_max": s.get("weekly_sessions_max")}
     for p in (STATE, PUB):
         p.parent.mkdir(parents=True, exist_ok=True); p.write_text(json.dumps(out, indent=1), encoding="utf-8")
     return out
