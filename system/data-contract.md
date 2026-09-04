@@ -50,7 +50,7 @@ Kinds and the `meta` the webapp reads:
 | research | `digest` | `minutes`, `path`, `check` (question count), `check_score` "4 of 5" once taken. The file ends with a `## Check` block the webapp parses; format in `config/lanes/research/LANE.md` |
 | research | `problem` | `pattern`, `due` yyyy-mm-dd, `status` queued \| open \| passed \| struggled, `path` |
 | research | `profile` | `side` strength \| gap, `evidence` (item id or check id) |
-| operations | `inbox` | `account`, `status` connected \| not_connected, `triaged` |
+| operations | `inbox` | `account`, `status` connected \| not_connected, `triaged`. Which accounts are active lives in `config/lanes/operations/accounts.json`, not the log. |
 | operations | `deletion` | `sender`, `count`, `account`, `proposed`; after execution `executed` and `trashed` |
 | operations | `mission` | `updated` yyyy-mm-dd, `path` |
 | sim | `drill` | `lead`, `category`, `question`, `path`; `answered`, `score`, `retry` as it moves |

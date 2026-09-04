@@ -1,0 +1,12 @@
+{
+ "career": {
+  "server": "gmail-career",
+  "address": "SamShaheen.tech@gmail.com",
+  "active": true
+ },
+ "personal": {
+  "server": "gmail-personal",
+  "address": "",
+  "active": false
+ }
+}

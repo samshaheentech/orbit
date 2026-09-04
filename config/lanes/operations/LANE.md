@@ -11,12 +11,9 @@ The lane with real side effects, so the rules come first and are not negotiable.
 6. Cap 200 messages per run per account; cap 10 new deletion proposals per run.
 
 ## Accounts
-| server name | account | purpose |
-|-------------|---------|---------|
-| `gmail-career` | SamShaheen.tech@gmail.com | career, clean, keep it that way |
-| `gmail-personal` | personal Gmail | high noise, triage and clean |
+`config/lanes/operations/accounts.json` is the live source of truth for which accounts are connected. Tasks only act on accounts where `active` is true; an inactive account is skipped cleanly, not treated as an error. Today only `career` (`SamShaheen.tech@gmail.com`) is active; `personal` becomes active once its auth is done (`SETUP.md`) and its entry flipped to `active: true`.
 
-Tool names inside a fire are `mcp__<server name>__<tool>`, e.g. `mcp__gmail-personal__search_emails`.
+Tool names inside a fire are `mcp__<server name>__<tool>`, e.g. `mcp__gmail-career__search_emails`.
 
 ## Taxonomy
 Labels, created on first use with `get_or_create_label`:

@@ -42,15 +42,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         web.uiDelegate = self
         web.setValue(false, forKey: "drawsBackground")
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1180, height: 820),
-                          styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
         window.title = "Orbit"
-        window.titlebarAppearsTransparent = true
         window.appearance = NSAppearance(named: .darkAqua)
         window.backgroundColor = NSColor(red: 0.059, green: 0.067, blue: 0.078, alpha: 1)
         window.minSize = NSSize(width: 720, height: 520)
         window.contentView = web
-        window.setFrameAutosaveName("OrbitMain")
+        window.isReleasedWhenClosed = false
+
+        // Restore the last position, but only if it still lands on a real screen -
+        // otherwise a stale frame (old resolution, unplugged monitor) leaves the
+        // window stuck off-screen or under the menu bar with no way to drag it back.
+        let autosaveName = "OrbitMain"
+        let hasSaved = window.setFrameUsingName(autosaveName)
+        let onScreen = NSScreen.screens.contains { $0.visibleFrame.intersects(window.frame) }
+        if !hasSaved || !onScreen {
+            window.center()
+        }
+        window.setFrameAutosaveName(autosaveName)
         window.makeKeyAndOrderFront(nil)
         web.load(URLRequest(url: ORBIT_URL))
         NSApp.activate(ignoringOtherApps: true)
